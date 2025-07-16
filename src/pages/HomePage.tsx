@@ -2,7 +2,14 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, Mail, Search } from "lucide-react";
-import bg from "/bg.png";
+import bgfinal from "/bg-final.png";
+import love from "/love.png";
+import awan1 from "/awan1.png";
+import awan2 from "/awan2.png";
+import awan3 from "/awan3.png";
+import awan4 from "/awan4.png";
+import awan5 from "/awan5.png";
+import bulan from "/bulan.png";
 
 function HomePage() {
   const [isGameStarted, setIsGameStarted] = useState(false);
@@ -17,14 +24,75 @@ function HomePage() {
     navigate("/how-to");
   };
 
+  const cloudData = [
+    { src: awan1, top: "10%", left: "5%", size: "w-16 md:w-24", delay: 0 },
+    { src: awan2, top: "20%", right: "10%", size: "w-20 md:w-28", delay: 0.5 },
+    { src: awan3, bottom: "30%", left: "15%", size: "w-16 md:w-24", delay: 1 },
+    {
+      src: awan4,
+      bottom: "20%",
+      right: "5%",
+      size: "w-24 md:w-32",
+      delay: 1.2,
+    },
+    { src: awan5, top: "20%", left: "40%", size: "w-20 md:w-28", delay: 0.3 },
+  ];
+
+  const renderedClouds = cloudData.map((cloud, index) => (
+    <motion.img
+      key={index}
+      src={cloud.src}
+      alt={`Cloud ${index + 1}`}
+      className="absolute w-20 md:w-28 opacity-70"
+      style={{
+        ...("top" in cloud ? { top: cloud.top } : {}),
+        ...("bottom" in cloud ? { bottom: cloud.bottom } : {}),
+        ...("left" in cloud ? { left: cloud.left } : {}),
+        ...("right" in cloud ? { right: cloud.right } : {}),
+        zIndex: 10,
+      }}
+      animate={{ y: [0, -15, 0] }}
+      transition={{
+        duration: 4,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: cloud.delay,
+      }}
+    />
+  ));
+
+  const loveIcons = Array.from({ length: 5 }, (_, index) => (
+    <motion.img
+      key={index}
+      src={love}
+      alt="Love"
+      className="w-6 h-6 md:w-8 md:h-8"
+      initial={{ scale: 1 }}
+      animate={{ scale: [1, 1.2, 1] }}
+      transition={{ duration: 1, repeat: Infinity, delay: index * 0.2 }}
+    />
+  ));
+
   return (
     <div
       className="min-h-screen bg-cover bg-center relative flex flex-col justify-center items-center"
       style={{
-        backgroundImage: `url(${bg})`,
+        backgroundImage: `url(${bgfinal})`,
       }}
     >
-      {/* Main Title */}
+      {renderedClouds}
+      <div className="absolute top-4 right-4 flex space-x-2 z-50">
+        {loveIcons}
+      </div>
+      <div className="absolute -top-6 -left-6 flex space-x-2 z-50">
+        <motion.img
+          src={bulan}
+          alt="Cloud"
+          className="w-16 h-16 md:w-32 md:h-32"
+          initial={{ scale: 1 }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        />
+      </div>
       <motion.div
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}

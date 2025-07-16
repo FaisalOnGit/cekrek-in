@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Mail, Search } from "lucide-react";
-import bg from "/bg.png";
+import bgfinal from "/bg-final.png";
 
 interface StepPanelProps {
   title: string;
@@ -89,7 +89,7 @@ function HowToPage() {
     <div
       className="min-h-screen relative overflow-hidden"
       style={{
-        backgroundImage: `url(${bg})`,
+        backgroundImage: `url(${bgfinal})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
