@@ -12,12 +12,33 @@ import awan5 from "/awan5.png";
 import bulan from "/bulan.png";
 
 function HomePage() {
-  const [isGameStarted, setIsGameStarted] = useState(false);
   const navigate = useNavigate();
+  const [isGameStarted, setIsGameStarted] = useState(false);
+  const [showGameStart, setShowGameStart] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   const handleStartGame = () => {
     setIsGameStarted(true);
-    setTimeout(() => setIsGameStarted(false), 2000);
+    setShowGameStart(true);
+
+    // Setelah 1 detik, sembunyikan "GAME START!" dan mulai countdown
+    setTimeout(() => {
+      setShowGameStart(false);
+      setCountdown(3);
+
+      const interval = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev === 1) {
+            clearInterval(interval);
+            setIsGameStarted(false);
+            setCountdown(null);
+            navigate("/pay");
+            return null;
+          }
+          return prev! - 1;
+        });
+      }, 1000);
+    }, 1000);
   };
 
   const navigateToHowTo = () => {
@@ -209,24 +230,20 @@ function HomePage() {
         </div>
       </div>
 
-      {/* Game Start Overlay */}
       {isGameStarted && (
         <motion.div
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0 }}
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50"
         >
           <motion.div
             className="text-6xl text-white font-bold"
             style={{ fontFamily: '"Press Start 2P", monospace' }}
-            animate={{
-              scale: [1, 1.2, 1],
-              rotate: [0, 10, -10, 0],
-            }}
+            animate={{ scale: [1, 1.2, 1] }}
             transition={{ duration: 0.5 }}
           >
-            GAME START!
+            {showGameStart ? "GAME START!" : countdown}
           </motion.div>
         </motion.div>
       )}
