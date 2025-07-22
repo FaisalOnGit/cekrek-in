@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import bgfinal from "/bg-final.png";
+import bg from "/bg2.png";
 
 // Tentukan tipe untuk template
 type Template = {
@@ -16,7 +17,7 @@ function ChooseTemplatePage() {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    fetch("http://156.224.78.28:8888/templates/")
+    fetch("http://localhost:8888/templates/")
       .then((res) => res.json())
       .then((data: Template[]) => {
         setTemplates(data);

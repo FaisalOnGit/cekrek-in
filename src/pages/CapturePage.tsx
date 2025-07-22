@@ -2,7 +2,9 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Webcam from "react-webcam";
+import axios from "axios"; // Import axios for POST requests
 import bgfinal from "/bg-final.png";
+import bg from "/bg.png";
 
 interface PhotoLayout {
   name: string;
@@ -37,6 +39,9 @@ function PhotoCapturePage() {
   const [capturedPhotos, setCapturedPhotos] = useState<string[]>([]);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [error, setError] = useState<string | null>(null); // Error state for API failure
+  const [result, setResult] = useState<any>(null); // Result state for API success
+  const [isPopupVisible, setIsPopupVisible] = useState(false); // Show popup after upload
 
   const webcamProps = {
     audio: false,
@@ -97,7 +102,11 @@ function PhotoCapturePage() {
     if (nextIndex >= selectedLayout.totalPhoto) {
       localStorage.setItem("capturedPhotos", JSON.stringify(newPhotos));
       localStorage.setItem("selectedLayout", JSON.stringify(selectedLayout));
-      setTimeout(() => navigate("/result"), 2000);
+
+      // Call the API to upload photos after all are captured
+      handleSubmit(newPhotos); // Pass the captured photos to the submit function
+
+      setTimeout(() => setIsPopupVisible(true), 2000); // Show popup after a brief timeout
     }
 
     setIsCapturing(false);
@@ -127,6 +136,43 @@ function PhotoCapturePage() {
 
   const handleDelayChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedDelay(Number(e.target.value));
+  };
+
+  // Function to handle the POST request and upload photos to the API
+  const handleSubmit = async (photos: string[]) => {
+    try {
+      const formData = new FormData();
+      photos.forEach((photo, index) => {
+        const byteArray = Uint8Array.from(atob(photo.split(",")[1]), (c) =>
+          c.charCodeAt(0)
+        );
+        const file = new Blob([byteArray], { type: "image/jpeg" });
+        formData.append("photos", file, `photo${index + 1}.jpg`);
+      });
+
+      const response = await axios.post(
+        "http://localhost:8888/process/1", // API endpoint
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            accept: "application/json",
+          },
+        }
+      );
+
+      console.log("Photos uploaded successfully", response.data);
+      setResult(response.data); // Save the result response
+    } catch (err: any) {
+      console.error("Upload failed:", err);
+      setError(
+        err.response?.data?.message || err.message || "Failed to upload photos"
+      );
+    }
+  };
+
+  const closePopup = () => {
+    setIsPopupVisible(false); // Hide popup when closed
   };
 
   return (
@@ -331,6 +377,30 @@ function PhotoCapturePage() {
             Memproses hasil...
           </p>
         </motion.div>
+      )}
+
+      {/* Popup for displaying the API response */}
+      {isPopupVisible && result && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-8 rounded-lg max-w-lg">
+            <h3 className="text-lg font-semibold">Hasil Proses</h3>
+            <div className="mt-4">
+              {result.image_base64 && (
+                <img
+                  src={`data:image/png;base64,${result.image_base64}`}
+                  alt="Processed Result"
+                  className="w-full max-h-80 object-cover rounded-lg"
+                />
+              )}
+            </div>
+            <button
+              onClick={closePopup}
+              className="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
