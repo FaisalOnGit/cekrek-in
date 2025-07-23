@@ -7,6 +7,7 @@ import PhotoPage from "./pages/PhotoPage";
 import PhotoCapturePage from "./pages/CapturePage";
 import Dashboard from "./pages/DashboardPage";
 import Test from "./pages/TestPage";
+import ResultPage from "./pages/ResultPage";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
       <Route path="/template" element={<ChooseTemplatePage />} />
       <Route path="/photo" element={<PhotoPage />} />
       <Route path="/capture" element={<PhotoCapturePage />} />
+      <Route path="/result" element={<ResultPage />} />
       <Route path="/test" element={<Test />} />
 
       {/* Dashboard */}

@@ -2,9 +2,9 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Webcam from "react-webcam";
-import axios from "axios"; // Import axios for POST requests
+import axios from "axios";
 import bgfinal from "/bg-final.png";
-import bg from "/bg.png";
+import bg from "/bg2.png";
 
 interface PhotoLayout {
   name: string;
@@ -178,20 +178,42 @@ function PhotoCapturePage() {
   return (
     <div
       className="min-h-screen bg-cover bg-center flex flex-col items-center pt-6"
-      style={{ backgroundImage: `url(${bgfinal})` }}
+      style={{ backgroundImage: `url(${bg})` }}
     >
-      <div className="text-center mb-6">
-        <h1
-          className="text-2xl md:text-4xl text-white mb-2"
-          style={{ fontFamily: '"Press Start 2P", monospace' }}
-        >
-          {showSettings ? "ATUR SESI FOTO" : "SESI FOTO"}
-        </h1>
-        {!showSettings && (
-          <p
-            className="text-white text-sm"
-            style={{ fontFamily: '"Press Start 2P", monospace' }}
+      <div
+        className="text-center mb-6"
+        style={{ fontFamily: '"Press Start 2P", monospace' }}
+      >
+        <div className="text-3xl md:text-4xl font-bold mb-2 tracking-wider">
+          <span
+            className="text-white drop-shadow-lg animate-bounce"
+            style={{ textShadow: "3px 3px 0px #666" }}
           >
+            {showSettings ? "ATUR" : "SESI"}
+          </span>
+        </div>
+        <div className="text-3xl md:text-4xl font-bold mb-4 tracking-wider">
+          <span
+            className="text-blue-800 drop-shadow-lg animate-bounce"
+            style={{
+              textShadow: "3px 3px 0px #333",
+              animationDelay: "0.2s",
+            }}
+          >
+            SESI
+          </span>
+          <span
+            className="ml-4 text-orange-500 drop-shadow-lg animate-bounce"
+            style={{
+              textShadow: "3px 3px 0px #cc5500",
+              animationDelay: "0.4s",
+            }}
+          >
+            FOTO
+          </span>
+        </div>
+        {!showSettings && (
+          <p className="text-sm text-purple-800">
             Foto ke-{currentPhotoIndex + 1} dari {selectedLayout.totalPhoto}
           </p>
         )}

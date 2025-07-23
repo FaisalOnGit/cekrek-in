@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, Mail, Search } from "lucide-react";
+import { Mail, Search } from "lucide-react";
 import bgfinal from "/bg-final.png";
 import love from "/love.png";
 import awan1 from "/awan1.png";
@@ -10,6 +10,8 @@ import awan3 from "/awan3.png";
 import awan4 from "/awan4.png";
 import awan5 from "/awan5.png";
 import bulan from "/bulan.png";
+import left from "/left.png";
+import right from "/right.png";
 
 function HomePage() {
   const navigate = useNavigate();
@@ -125,7 +127,7 @@ function HomePage() {
             animate={{ rotate: [0, 15, -15, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            <ChevronRight className="w-16 h-16 text-cyan-400" />
+            <img src={left} alt="Left Arrow" className="w-16 h-16" />
           </motion.div>
 
           <motion.h1
@@ -147,7 +149,7 @@ function HomePage() {
             animate={{ rotate: [0, -15, 15, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            <ChevronRight className="w-16 h-16 text-cyan-400 rotate-180" />
+            <img src={right} alt="Right Arrow" className="w-16 h-16" />
           </motion.div>
         </div>
       </motion.div>
