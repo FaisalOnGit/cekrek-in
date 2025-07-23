@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import Webcam from "react-webcam";
-import { Camera, RotateCcw, Download, Settings } from "lucide-react";
+import { Camera, RotateCcw, Download, Settings, Upload, X } from "lucide-react";
 
 interface PhotoLayout {
   name: string;
@@ -20,6 +22,7 @@ const delayOptions = [
 ];
 
 function Test() {
+  const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState(35 * 60); // 35 minutes in seconds
   const [capturedImages, setCapturedImages] = useState<string[]>([]);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
@@ -31,6 +34,13 @@ function Test() {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
+
+  // New states for POST logic
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<any>(null);
+
   const webcamRef = useRef<Webcam>(null);
 
   useEffect(() => {
@@ -82,8 +92,81 @@ function Test() {
     const nextIndex = currentPhotoIndex + 1;
     setCapturedImages(newImages);
     setCurrentPhotoIndex(nextIndex);
+
+    // Auto-upload when all photos are captured
+    if (nextIndex >= selectedLayout.totalPhoto) {
+      handleSubmit(newImages);
+    }
+
     setIsCapturing(false);
-  }, [webcamRef, capturedImages, currentPhotoIndex]);
+  }, [webcamRef, capturedImages, currentPhotoIndex, selectedLayout.totalPhoto]);
+
+  // POST logic from capture page with navigation to result
+  const handleSubmit = async (photos: string[]) => {
+    setIsUploading(true);
+    setUploadProgress(0);
+    setError(null);
+
+    // Simulate progress animation
+    const progressInterval = setInterval(() => {
+      setUploadProgress((prev) => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return prev;
+        }
+        return prev + Math.random() * 10;
+      });
+    }, 200);
+
+    try {
+      const formData = new FormData();
+      photos.forEach((photo, index) => {
+        const byteArray = Uint8Array.from(atob(photo.split(",")[1]), (c) =>
+          c.charCodeAt(0)
+        );
+        const file = new Blob([byteArray], { type: "image/jpeg" });
+        formData.append("photos", file, `photo${index + 1}.jpg`);
+      });
+
+      // Using fetch instead of axios to avoid external dependencies
+      const response = await fetch("http://localhost:8888/process/1", {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Photos uploaded successfully", data);
+
+      // Complete progress and navigate directly to result
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
+      // Navigate immediately to Result page with result data
+      setTimeout(() => {
+        navigate("/result", {
+          state: {
+            result: data,
+            capturedPhotos: photos,
+          },
+        });
+      }, 1000);
+    } catch (err: any) {
+      console.error("Upload failed:", err);
+      clearInterval(progressInterval);
+      setError(
+        err.response?.data?.message || err.message || "Failed to upload photos"
+      );
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
+  };
 
   const retakePhoto = () => {
     if (capturedImages.length === 0) return;
@@ -98,6 +181,10 @@ function Test() {
     setCapturedImages([]);
     setCountdown(null);
     setIsCapturing(false);
+    setIsUploading(false);
+    setUploadProgress(0);
+    setError(null);
+    setResult(null);
   };
 
   const downloadImages = () => {
@@ -126,7 +213,8 @@ function Test() {
     facingMode,
   };
 
-  const isSessionComplete = currentPhotoIndex >= selectedLayout.totalPhoto;
+  const isSessionComplete =
+    currentPhotoIndex >= selectedLayout.totalPhoto && !isUploading;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200 relative overflow-hidden font-mono">
@@ -167,7 +255,7 @@ function Test() {
               className="text-white drop-shadow-lg animate-bounce"
               style={{ textShadow: "3px 3px 0px #666" }}
             >
-              {showSettings ? "ATUR" : "SESI"}
+              {showSettings ? "ATUR" : isUploading ? "MEMPROSES" : "SESI"}
             </span>
           </div>
           <div className="text-3xl md:text-4xl font-bold mb-4 tracking-wider">
@@ -190,12 +278,44 @@ function Test() {
               FOTO
             </span>
           </div>
-          {!showSettings && (
+          {!showSettings && !isUploading && (
             <p className="text-sm text-purple-800">
               Foto ke-{currentPhotoIndex + 1} dari {selectedLayout.totalPhoto}
             </p>
           )}
+          {isUploading && (
+            <p className="text-sm text-green-600 animate-pulse">
+              Sedang memproses foto Anda...
+            </p>
+          )}
         </div>
+
+        {/* Progress Bar for Upload */}
+        {isUploading && (
+          <div className="w-full max-w-6xl mb-6">
+            <div className="bg-gray-700 rounded-full h-6 overflow-hidden border-2 border-white">
+              <motion.div
+                className="bg-gradient-to-r from-green-400 to-blue-500 h-full rounded-full flex items-center justify-center"
+                initial={{ width: 0 }}
+                animate={{ width: `${uploadProgress}%` }}
+                transition={{ duration: 0.3 }}
+              >
+                <span
+                  className="text-white text-xs font-bold"
+                  style={{ fontFamily: '"Press Start 2P", monospace' }}
+                >
+                  {Math.round(uploadProgress)}%
+                </span>
+              </motion.div>
+            </div>
+            <p
+              className="text-center text-purple-800 text-xs mt-2"
+              style={{ fontFamily: '"Press Start 2P", monospace' }}
+            >
+              MENGUPLOAD & MEMPROSES FOTO...
+            </p>
+          </div>
+        )}
 
         {/* Settings Panel */}
         {showSettings && (
@@ -258,8 +378,8 @@ function Test() {
           </div>
         )}
 
-        {/* Progress Bar */}
-        {!showSettings && (
+        {/* Session Progress Bar */}
+        {!showSettings && !isUploading && (
           <div className="w-full max-w-6xl bg-white/50 rounded-full h-4 mb-6">
             <div
               className="bg-purple-600 h-4 rounded-full transition-all duration-500"
@@ -273,130 +393,143 @@ function Test() {
         )}
 
         {/* Camera Box */}
-        <div className="w-full max-w-6xl bg-gray-900 rounded-2xl overflow-hidden border-4 border-purple-500 shadow-2xl">
-          {/* Camera Header */}
-          <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-4">
-            <div className="flex items-center justify-center space-x-2">
-              <Camera className="text-white" size={24} />
-              <span className="text-white font-bold text-lg">
-                CEKREK.IN Camera
-              </span>
+        {!isUploading && (
+          <div className="w-full max-w-6xl bg-gray-900 rounded-2xl overflow-hidden border-4 border-purple-500 shadow-2xl">
+            {/* Camera Header */}
+            <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-4">
+              <div className="flex items-center justify-center space-x-2">
+                <Camera className="text-white" size={24} />
+                <span className="text-white font-bold text-lg">
+                  CEKREK.IN Camera
+                </span>
+              </div>
             </div>
-          </div>
 
-          {/* Camera View */}
-          <div className="relative bg-black" style={{ aspectRatio: "21/9" }}>
-            <Webcam
-              ref={webcamRef}
-              screenshotFormat="image/jpeg"
-              videoConstraints={videoConstraints}
-              className="w-full h-full object-cover"
-            />
+            {/* Camera View */}
+            <div className="relative bg-black" style={{ aspectRatio: "21/9" }}>
+              <Webcam
+                ref={webcamRef}
+                screenshotFormat="image/jpeg"
+                videoConstraints={videoConstraints}
+                className="w-full h-full object-cover"
+              />
 
-            {/* Countdown Overlay */}
-            {countdown !== null && (
-              <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center">
+              {/* Countdown Overlay */}
+              {countdown !== null && (
+                <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center">
+                  <motion.div
+                    className="text-white text-8xl font-bold"
+                    style={{ fontFamily: '"Press Start 2P", monospace' }}
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    {countdown}
+                  </motion.div>
+                </div>
+              )}
+
+              {/* Flash Effect */}
+              {isCapturing && countdown === null && (
+                <motion.div
+                  className="absolute inset-0 bg-white"
+                  animate={{ opacity: [0, 1, 0] }}
+                  transition={{ duration: 0.3 }}
+                />
+              )}
+
+              {/* Overlay decorations */}
+              <div className="absolute inset-0 pointer-events-none">
                 <div
-                  className="text-white text-8xl font-bold animate-pulse"
-                  style={{ fontFamily: '"Press Start 2P", monospace' }}
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-spin"
+                  style={{ animationDuration: "8s" }}
                 >
-                  {countdown}
+                  <div className="w-8 h-0.5 bg-white/50"></div>
+                  <div className="w-0.5 h-8 bg-white/50 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
                 </div>
-              </div>
-            )}
-
-            {/* Flash Effect */}
-            {isCapturing && countdown === null && (
-              <div className="absolute inset-0 bg-white animate-pulse" />
-            )}
-
-            {/* Overlay decorations */}
-            <div className="absolute inset-0 pointer-events-none">
-              <div
-                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-spin"
-                style={{ animationDuration: "8s" }}
-              >
-                <div className="w-8 h-0.5 bg-white/50"></div>
-                <div className="w-0.5 h-8 bg-white/50 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
               </div>
             </div>
-          </div>
 
-          {/* Controls */}
-          <div className="bg-gray-800 p-6">
-            {showSettings ? (
-              <div className="flex justify-center">
-                <div className="flex items-center space-x-2 text-white">
-                  <Settings size={20} />
-                  <span className="font-bold">
-                    Atur pengaturan terlebih dahulu
-                  </span>
+            {/* Controls */}
+            <div className="bg-gray-800 p-6">
+              {showSettings ? (
+                <div className="flex justify-center">
+                  <div className="flex items-center space-x-2 text-white">
+                    <Settings size={20} />
+                    <span className="font-bold">
+                      Atur pengaturan terlebih dahulu
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ) : isSessionComplete ? (
-              <div className="flex justify-center space-x-4">
-                <button
-                  onClick={downloadImages}
-                  className="flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-full font-bold transition-all duration-200 hover:scale-105 active:scale-95"
-                >
-                  <Download size={24} />
-                  <span>DOWNLOAD SEMUA</span>
-                </button>
-                <button
-                  onClick={resetSession}
-                  className="flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-4 rounded-full font-bold transition-all duration-200 hover:scale-105 active:scale-95"
-                >
-                  <Settings size={20} />
-                  <span>SESI BARU</span>
-                </button>
-              </div>
-            ) : (
-              <div className="flex justify-center space-x-4">
-                <button
-                  onClick={switchCamera}
-                  className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-full font-bold transition-all duration-200 hover:scale-105 active:scale-95"
-                >
-                  <RotateCcw size={20} />
-                  <span>Switch</span>
-                </button>
-
-                {capturedImages.length > 0 && (
+              ) : isSessionComplete && !result ? (
+                <div className="flex justify-center space-x-4">
                   <button
-                    onClick={retakePhoto}
-                    className="flex items-center space-x-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full font-bold transition-all duration-200 hover:scale-105 active:scale-95"
+                    onClick={downloadImages}
+                    className="flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-full font-bold transition-all duration-200 hover:scale-105 active:scale-95"
+                  >
+                    <Download size={24} />
+                    <span>DOWNLOAD SEMUA</span>
+                  </button>
+                  <button
+                    onClick={resetSession}
+                    className="flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-4 rounded-full font-bold transition-all duration-200 hover:scale-105 active:scale-95"
+                  >
+                    <Settings size={20} />
+                    <span>SESI BARU</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="flex justify-center space-x-4">
+                  <button
+                    onClick={switchCamera}
+                    className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-full font-bold transition-all duration-200 hover:scale-105 active:scale-95"
                   >
                     <RotateCcw size={20} />
-                    <span>ULANGI</span>
+                    <span>Switch</span>
                   </button>
-                )}
 
-                <button
-                  onClick={startCountdown}
-                  disabled={isCapturing}
-                  className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white px-8 py-4 rounded-full font-bold text-xl transition-all duration-200 shadow-lg hover:scale-105 active:scale-95 animate-pulse"
-                >
-                  <Camera size={24} />
-                  <span>{isCapturing ? "BERSIAP..." : "AMBIL FOTO"}</span>
-                </button>
+                  {capturedImages.length > 0 &&
+                    currentPhotoIndex < selectedLayout.totalPhoto && (
+                      <button
+                        onClick={retakePhoto}
+                        className="flex items-center space-x-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full font-bold transition-all duration-200 hover:scale-105 active:scale-95"
+                      >
+                        <RotateCcw size={20} />
+                        <span>ULANGI</span>
+                      </button>
+                    )}
 
-                <button
-                  onClick={resetSession}
-                  className="flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full font-bold transition-all duration-200 hover:scale-105 active:scale-95"
-                >
-                  <Settings size={20} />
-                  <span>RESET</span>
-                </button>
-              </div>
-            )}
+                  {currentPhotoIndex < selectedLayout.totalPhoto && (
+                    <button
+                      onClick={startCountdown}
+                      disabled={isCapturing}
+                      className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white px-8 py-4 rounded-full font-bold text-xl transition-all duration-200 shadow-lg hover:scale-105 active:scale-95 animate-pulse"
+                    >
+                      <Camera size={24} />
+                      <span>{isCapturing ? "BERSIAP..." : "AMBIL FOTO"}</span>
+                    </button>
+                  )}
+
+                  <button
+                    onClick={resetSession}
+                    className="flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full font-bold transition-all duration-200 hover:scale-105 active:scale-95"
+                  >
+                    <Settings size={20} />
+                    <span>RESET</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Captured Photos Preview */}
-        {capturedImages.length > 0 && (
+        {capturedImages.length > 0 && !isUploading && (
           <div className="mt-6 flex gap-3 flex-wrap justify-center">
             {capturedImages.map((image, idx) => (
-              <div
+              <motion.div
                 key={idx}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
                 className="w-24 h-16 border-4 border-white rounded-lg overflow-hidden shadow-lg bg-white"
               >
                 <img
@@ -404,14 +537,18 @@ function Test() {
                   alt={`Photo ${idx + 1}`}
                   className="w-full h-full object-cover"
                 />
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
 
-        {/* Completion Message */}
-        {isSessionComplete && !showSettings && (
-          <div className="text-center mt-6">
+        {/* Completion Message - Only show if not uploading and session complete without result */}
+        {isSessionComplete && !showSettings && !result && (
+          <motion.div
+            className="text-center mt-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
             <p
               className="text-purple-800 text-2xl font-bold mb-2"
               style={{ fontFamily: '"Press Start 2P", monospace' }}
@@ -419,14 +556,65 @@ function Test() {
               FOTO SELESAI!
             </p>
             <p
-              className="text-purple-600 text-sm"
+              className="text-purple-600 text-sm mb-2"
               style={{ fontFamily: '"Press Start 2P", monospace' }}
             >
               {capturedImages.length} foto berhasil diambil
             </p>
-          </div>
+          </motion.div>
+        )}
+
+        {/* Result Success Message */}
+        {result && !isUploading && (
+          <motion.div
+            className="text-center mt-6 bg-green-100 p-4 rounded-lg border-2 border-green-400"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <p
+              className="text-green-800 text-xl font-bold mb-2"
+              style={{ fontFamily: '"Press Start 2P", monospace' }}
+            >
+              UPLOAD BERHASIL!
+            </p>
+            <p
+              className="text-green-600 text-sm"
+              style={{ fontFamily: '"Press Start 2P", monospace' }}
+            >
+              Menuju halaman hasil...
+            </p>
+          </motion.div>
         )}
       </div>
+
+      {/* Error Display */}
+      {error && (
+        <motion.div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <div className="bg-red-600 text-white p-6 rounded-lg max-w-md text-center mx-4">
+            <h3
+              className="text-lg font-bold mb-4"
+              style={{ fontFamily: '"Press Start 2P", monospace' }}
+            >
+              ERROR!
+            </h3>
+            <p className="mb-4 text-sm">{error}</p>
+            <button
+              onClick={() => {
+                setError(null);
+                setIsUploading(false);
+                setUploadProgress(0);
+              }}
+              className="px-6 py-2 bg-white text-red-600 rounded-lg font-bold hover:bg-gray-100 transition-colors"
+            >
+              TUTUP
+            </button>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

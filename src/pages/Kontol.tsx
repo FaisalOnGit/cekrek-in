@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Camera,
@@ -14,10 +13,6 @@ import {
   X,
   Upload,
 } from "lucide-react";
-import Webcam from "react-webcam";
-import axios from "axios";
-import bgfinal from "/bg-final.png";
-import bg from "/bg2.png";
 
 interface PhotoLayout {
   name: string;
@@ -37,16 +32,12 @@ const delayOptions = [
 ];
 
 function PhotoCapturePage() {
-  const navigate = useNavigate();
-  const webcamRef = useRef<Webcam>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
-    null
-  );
   const [selectedLayout, setSelectedLayout] = useState<PhotoLayout>(
     photoLayouts[0]
   );
-  const [timeLeft, setTimeLeft] = useState(35 * 60);
   const [selectedDelay, setSelectedDelay] = useState(3);
   const [showSettings, setShowSettings] = useState(true);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
@@ -54,29 +45,36 @@ function PhotoCapturePage() {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<any>(null);
-  const [isUploading, setIsUploading] = useState(false); // Loading state
-  const [uploadProgress, setUploadProgress] = useState(0); // Progress percentage
-
-  const webcamProps = {
-    audio: false,
-    screenshotFormat: "image/jpeg",
-    mirrored: true,
-    videoConstraints: {
-      facingMode: "user",
-      width: 1280,
-      height: 720,
-    },
-  };
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [stream, setStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
-    const templateId = localStorage.getItem("selectedTemplateId");
-    if (!templateId) {
-      navigate("/template");
-      return;
-    }
-    setSelectedTemplateId(templateId);
-  }, [navigate]);
+    // Initialize camera
+    navigator.mediaDevices
+      .getUserMedia({
+        video: {
+          width: 1920,
+          height: 1080,
+          facingMode: "user",
+        },
+      })
+      .then((mediaStream) => {
+        setStream(mediaStream);
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream;
+        }
+      })
+      .catch((err) => {
+        setError("Tidak dapat mengakses kamera: " + err.message);
+      });
+
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
 
   const startPhotoSession = () => {
     setShowSettings(false);
@@ -102,12 +100,22 @@ function PhotoCapturePage() {
   };
 
   const capturePhoto = () => {
-    if (!webcamRef.current) return;
-    const imageSrc = webcamRef.current.getScreenshot();
-    if (!imageSrc) {
-      setIsCapturing(false);
-      return;
-    }
+    if (!videoRef.current || !canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) return;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    // Flip horizontally for mirror effect
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+
+    const imageSrc = canvas.toDataURL("image/jpeg", 0.8);
 
     const newPhotos = [...capturedPhotos, imageSrc];
     const nextIndex = currentPhotoIndex + 1;
@@ -115,11 +123,7 @@ function PhotoCapturePage() {
     setCurrentPhotoIndex(nextIndex);
 
     if (nextIndex >= selectedLayout.totalPhoto) {
-      // Save only essential data to localStorage (not the API result)
-      localStorage.setItem("capturedPhotos", JSON.stringify(newPhotos));
-      localStorage.setItem("selectedLayout", JSON.stringify(selectedLayout));
-
-      // Call the API to upload photos after all are captured
+      // Simulate upload process
       handleSubmit(newPhotos);
     }
 
@@ -143,8 +147,6 @@ function PhotoCapturePage() {
     setUploadProgress(0);
   };
 
-  const handleBack = () => navigate("/template");
-
   const handleLayoutChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const layout = photoLayouts.find((l) => l.name === e.target.value);
     if (layout) setSelectedLayout(layout);
@@ -154,95 +156,33 @@ function PhotoCapturePage() {
     setSelectedDelay(Number(e.target.value));
   };
 
-  // Function to handle the POST request and upload photos to the API
   const handleSubmit = async (photos: string[]) => {
     setIsUploading(true);
     setUploadProgress(0);
 
-    // Simulate progress animation
+    // Simulate upload progress
     const progressInterval = setInterval(() => {
       setUploadProgress((prev) => {
-        if (prev >= 90) {
+        if (prev >= 100) {
           clearInterval(progressInterval);
-          return prev;
+          setTimeout(() => {
+            setIsUploading(false);
+            alert(
+              "Upload selesai! Dalam implementasi asli, akan redirect ke halaman hasil."
+            );
+          }, 1000);
+          return 100;
         }
-        return prev + Math.random() * 10;
+        return prev + Math.random() * 15;
       });
     }, 200);
-
-    try {
-      const formData = new FormData();
-      photos.forEach((photo, index) => {
-        const byteArray = Uint8Array.from(atob(photo.split(",")[1]), (c) =>
-          c.charCodeAt(0)
-        );
-        const file = new Blob([byteArray], { type: "image/jpeg" });
-        formData.append("photos", file, `photo${index + 1}.jpg`);
-      });
-
-      const response = await axios.post(
-        "http://localhost:8888/process/1",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            accept: "application/json",
-          },
-        }
-      );
-
-      console.log("Photos uploaded successfully", response.data);
-
-      // Complete progress and navigate directly to result
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-
-      // Navigate immediately to Result page with result data
-      setTimeout(() => {
-        navigate("/result", {
-          state: {
-            result: response.data,
-            capturedPhotos: photos,
-          },
-        });
-      }, 1000);
-    } catch (err: any) {
-      console.error("Upload failed:", err);
-      clearInterval(progressInterval);
-      setError(
-        err.response?.data?.message || err.message || "Failed to upload photos"
-      );
-      setIsUploading(false);
-      setUploadProgress(0);
-    }
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs
-      .toString()
-      .padStart(2, "0")}`;
   };
 
   return (
-    <div
-      className="min-h-screen bg-cover bg-center flex flex-col items-center pt-6"
-      style={{ backgroundImage: `url(${bg})` }}
-    >
-      <div className="relative z-10 p-6 flex justify-between items-start w-full">
-        <div
-          className="text-xl text-purple-800 hover:scale-105 transition-transform"
-          style={{ fontFamily: '"Press Start 2P", monospace' }}
-        >
-          CEKREK.IN
-        </div>
-        <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg border-2 border-purple-300 shadow-lg">
-          <div className="text-orange-600 font-bold text-xl">
-            {formatTime(timeLeft)}
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex flex-col items-center pt-6">
+      {/* Hidden canvas for photo capture */}
+      <canvas ref={canvasRef} className="hidden" />
+
       <div
         className="text-center mb-6"
         style={{ fontFamily: '"Press Start 2P", monospace' }}
@@ -276,12 +216,12 @@ function PhotoCapturePage() {
           </span>
         </div>
         {!showSettings && !isUploading && (
-          <p className="text-sm text-purple-800">
+          <p className="text-sm text-purple-300">
             Foto ke-{currentPhotoIndex + 1} dari {selectedLayout.totalPhoto}
           </p>
         )}
         {isUploading && (
-          <p className="text-sm text-green-600 animate-pulse">
+          <p className="text-sm text-green-400 animate-pulse">
             Sedang memproses foto Anda...
           </p>
         )}
@@ -289,24 +229,26 @@ function PhotoCapturePage() {
 
       {/* Progress Bar for Upload */}
       {isUploading && (
-        <div className="w-full max-w-2xl mb-6 mx-6">
-          <div className="bg-gray-700 rounded-full h-6 overflow-hidden border-2 border-white">
+        <div className="w-full max-w-4xl mb-6 mx-6">
+          <div className="bg-gray-700 rounded-full h-8 overflow-hidden border-4 border-white shadow-lg">
             <motion.div
-              className="bg-gradient-to-r from-green-400 to-blue-500 h-full rounded-full flex items-center justify-center"
+              className="bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 h-full rounded-full flex items-center justify-center relative"
               initial={{ width: 0 }}
               animate={{ width: `${uploadProgress}%` }}
               transition={{ duration: 0.3 }}
             >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-30 animate-pulse"></div>
               <span
-                className="text-white text-xs font-bold"
+                className="text-white text-sm font-bold z-10 flex items-center gap-2"
                 style={{ fontFamily: '"Press Start 2P", monospace' }}
               >
+                <Upload size={16} />
                 {Math.round(uploadProgress)}%
               </span>
             </motion.div>
           </div>
           <p
-            className="text-center text-white text-xs mt-2"
+            className="text-center text-white text-xs mt-3"
             style={{ fontFamily: '"Press Start 2P", monospace' }}
           >
             MENGUPLOAD & MEMPROSES FOTO...
@@ -315,21 +257,22 @@ function PhotoCapturePage() {
       )}
 
       {showSettings ? (
-        <div className="bg-black bg-opacity-60 p-4 rounded-lg mb-4 border-2 border-white max-w-2xl">
+        <div className="bg-black bg-opacity-70 p-6 rounded-xl mb-6 border-4 border-white max-w-4xl backdrop-blur-sm shadow-2xl">
           <div className="flex gap-6 items-end">
             <div className="flex-1">
               <label
                 htmlFor="layout-select"
-                className="text-white text-sm mb-2 block"
+                className="text-white text-sm mb-3 block flex items-center gap-2"
                 style={{ fontFamily: '"Press Start 2P", monospace' }}
               >
+                <Image size={16} />
                 PILIH POSE
               </label>
               <select
                 id="layout-select"
                 value={selectedLayout.name}
                 onChange={handleLayoutChange}
-                className="w-full p-2 rounded-lg bg-gray-700 text-white border-2 border-gray-600 focus:border-yellow-400 focus:outline-none text-sm"
+                className="w-full p-3 rounded-lg bg-gray-700 text-white border-3 border-gray-600 focus:border-yellow-400 focus:outline-none text-sm hover:bg-gray-600 transition-colors"
                 style={{ fontFamily: '"Press Start 2P", monospace' }}
               >
                 {photoLayouts.map((layout) => (
@@ -343,16 +286,17 @@ function PhotoCapturePage() {
             <div className="flex-1">
               <label
                 htmlFor="delay-select"
-                className="text-white text-sm mb-2 block"
+                className="text-white text-sm mb-3 block flex items-center gap-2"
                 style={{ fontFamily: '"Press Start 2P", monospace' }}
               >
+                <Clock size={16} />
                 PILIH DELAY
               </label>
               <select
                 id="delay-select"
                 value={selectedDelay}
                 onChange={handleDelayChange}
-                className="w-full p-2 rounded-lg bg-gray-700 text-white border-2 border-gray-600 focus:border-yellow-400 focus:outline-none text-sm"
+                className="w-full p-3 rounded-lg bg-gray-700 text-white border-3 border-gray-600 focus:border-yellow-400 focus:outline-none text-sm hover:bg-gray-600 transition-colors"
                 style={{ fontFamily: '"Press Start 2P", monospace' }}
               >
                 {delayOptions.map((d) => (
@@ -365,80 +309,131 @@ function PhotoCapturePage() {
 
             <motion.button
               onClick={startPhotoSession}
-              className="px-6 py-2 rounded-lg text-sm bg-green-600 hover:bg-green-700 text-white"
+              className="px-8 py-3 rounded-lg text-sm bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
               style={{ fontFamily: '"Press Start 2P", monospace' }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
+              <Play size={16} />
               MULAI
             </motion.button>
           </div>
         </div>
       ) : (
         !isUploading && (
-          <div className="w-full max-w-2xl bg-gray-700 rounded-full h-4 mb-6 mx-6">
+          <div className="w-full max-w-4xl bg-gray-800 rounded-full h-6 mb-6 mx-6 border-2 border-white shadow-lg">
             <div
-              className="bg-yellow-400 h-4 rounded-full transition-all duration-500"
+              className="bg-gradient-to-r from-yellow-400 to-orange-500 h-6 rounded-full transition-all duration-500 flex items-center justify-end pr-2"
               style={{
                 width: `${
                   (currentPhotoIndex / selectedLayout.totalPhoto) * 100
                 }%`,
               }}
-            />
+            >
+              <CheckCircle size={16} className="text-white" />
+            </div>
           </div>
         )
       )}
 
       {!isUploading && (
         <>
-          <div className="relative mb-6">
-            <div className="w-[640px] h-[360px] bg-black rounded-lg overflow-hidden border-4 border-white shadow-lg">
-              <Webcam
-                ref={webcamRef}
-                className="w-full h-full object-cover"
-                {...webcamProps}
+          {/* Enhanced Camera Frame */}
+          <div className="relative mb-8">
+            {/* Outer decorative frame */}
+            <div className="absolute -inset-6 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl blur-sm opacity-75 animate-pulse"></div>
+            <div className="absolute -inset-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl opacity-80"></div>
+
+            {/* Main camera container */}
+            <div className="relative w-[900px] h-[500px] bg-black rounded-xl overflow-hidden border-8 border-white shadow-2xl">
+              {/* Corner decorations */}
+              <div className="absolute top-2 left-2 w-6 h-6 border-l-4 border-t-4 border-yellow-400 rounded-tl-lg"></div>
+              <div className="absolute top-2 right-2 w-6 h-6 border-r-4 border-t-4 border-yellow-400 rounded-tr-lg"></div>
+              <div className="absolute bottom-2 left-2 w-6 h-6 border-l-4 border-b-4 border-yellow-400 rounded-bl-lg"></div>
+              <div className="absolute bottom-2 right-2 w-6 h-6 border-r-4 border-b-4 border-yellow-400 rounded-br-lg"></div>
+
+              {/* LED indicators */}
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+                <div
+                  className={`w-3 h-3 rounded-full ${
+                    isCapturing ? "bg-red-500 animate-pulse" : "bg-green-500"
+                  } shadow-lg`}
+                ></div>
+                <div className="w-3 h-3 rounded-full bg-blue-500 animate-ping shadow-lg"></div>
+              </div>
+
+              {/* Camera label */}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-60 px-4 py-1 rounded-full">
+                <span
+                  className="text-white text-xs flex items-center gap-1"
+                  style={{ fontFamily: '"Press Start 2P", monospace' }}
+                >
+                  <Camera size={12} />
+                  LIVE
+                </span>
+              </div>
+
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover scale-x-[-1]"
               />
             </div>
 
+            {/* Countdown overlay */}
             {countdown !== null && (
-              <motion.div className="absolute inset-0 bg-black bg-opacity-70 rounded-lg flex items-center justify-center">
+              <motion.div className="absolute inset-0 bg-black bg-opacity-80 rounded-xl flex items-center justify-center">
                 <motion.div
-                  className="text-white text-8xl"
+                  className="text-white text-9xl flex items-center gap-4"
                   style={{ fontFamily: '"Press Start 2P", monospace' }}
-                  animate={{ scale: [1, 1.2, 1] }}
+                  animate={{ scale: [1, 1.3, 1] }}
                   transition={{ duration: 0.5 }}
                 >
+                  <Clock size={80} className="animate-spin" />
                   {countdown}
                 </motion.div>
               </motion.div>
             )}
 
+            {/* Flash effect */}
             {isCapturing && countdown === null && (
               <motion.div
-                className="absolute inset-0 bg-white rounded-lg"
+                className="absolute inset-0 bg-white rounded-xl"
                 animate={{ opacity: [0, 1, 0] }}
                 transition={{ duration: 0.3 }}
               />
             )}
           </div>
 
+          {/* Photo thumbnails */}
           {capturedPhotos.length > 0 && (
-            <div className="flex gap-2 mb-6">
+            <div className="flex gap-4 mb-8">
               {capturedPhotos.map((photo, idx) => (
                 <motion.div
                   key={idx}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="w-20 h-12 border-2 border-white rounded overflow-hidden"
+                  initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  className="relative w-28 h-20 border-4 border-white rounded-lg overflow-hidden shadow-lg"
                 >
                   <img
                     src={photo}
                     alt={`Photo ${idx + 1}`}
                     className="w-full h-full object-cover"
                   />
+                  <div className="absolute top-1 right-1 bg-green-500 rounded-full p-1">
+                    <CheckCircle size={12} className="text-white" />
+                  </div>
+                  <div className="absolute bottom-1 left-1 bg-black bg-opacity-60 px-2 py-1 rounded text-xs text-white">
+                    {idx + 1}
+                  </div>
                 </motion.div>
               ))}
             </div>
           )}
 
+          {/* Action buttons */}
           {!showSettings && (
             <div className="flex gap-4 mb-6">
               {currentPhotoIndex < selectedLayout.totalPhoto && (
@@ -496,12 +491,13 @@ function PhotoCapturePage() {
 
           {currentPhotoIndex >= selectedLayout.totalPhoto && !showSettings && (
             <motion.div
-              className="text-center mt-6"
+              className="text-center mt-8 bg-green-600 bg-opacity-80 p-6 rounded-xl border-4 border-white"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
+              <CheckCircle size={48} className="text-white mx-auto mb-4" />
               <p
-                className="text-white text-lg"
+                className="text-white text-xl"
                 style={{ fontFamily: '"Press Start 2P", monospace' }}
               >
                 FOTO SELESAI!
@@ -511,32 +507,36 @@ function PhotoCapturePage() {
         </>
       )}
 
-      {/* Error Display */}
+      {/* Enhanced Error Display */}
       {error && (
         <motion.div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+          className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
-          <div className="bg-red-600 text-white p-6 rounded-lg max-w-md text-center">
+          <motion.div
+            className="bg-red-600 text-white p-8 rounded-xl max-w-md text-center shadow-2xl border-4 border-white"
+            initial={{ scale: 0.8, y: 50 }}
+            animate={{ scale: 1, y: 0 }}
+          >
+            <div className="text-red-200 mb-4">
+              <X size={48} className="mx-auto" />
+            </div>
             <h3
-              className="text-lg font-bold mb-4"
+              className="text-xl font-bold mb-4"
               style={{ fontFamily: '"Press Start 2P", monospace' }}
             >
               ERROR!
             </h3>
-            <p className="mb-4">{error}</p>
+            <p className="mb-6 text-red-100">{error}</p>
             <button
-              onClick={() => {
-                setError(null);
-                setIsUploading(false);
-                setUploadProgress(0);
-              }}
-              className="px-6 py-2 bg-white text-red-600 rounded-lg font-bold"
+              onClick={() => setError(null)}
+              className="px-8 py-3 bg-white text-red-600 rounded-lg font-bold hover:bg-gray-100 transition-colors flex items-center gap-2 mx-auto"
             >
+              <X size={16} />
               TUTUP
             </button>
-          </div>
+          </motion.div>
         </motion.div>
       )}
     </div>
