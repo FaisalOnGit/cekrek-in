@@ -244,7 +244,7 @@ function Test() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex flex-col items-center px-6 pt-4">
+      <div className="relative z-10 flex flex-col items-center px-6">
         {/* Title Section */}
         <div
           className="text-center mb-6"
@@ -255,7 +255,7 @@ function Test() {
               className="text-white drop-shadow-lg animate-bounce"
               style={{ textShadow: "3px 3px 0px #666" }}
             >
-              {showSettings ? "ATUR" : isUploading ? "MEMPROSES" : "SESI"}
+              Lets
             </span>
           </div>
           <div className="text-3xl md:text-4xl font-bold mb-4 tracking-wider">
@@ -266,7 +266,7 @@ function Test() {
                 animationDelay: "0.2s",
               }}
             >
-              SESI
+              Start
             </span>
             <span
               className="ml-4 text-orange-500 drop-shadow-lg animate-bounce"
@@ -275,7 +275,7 @@ function Test() {
                 animationDelay: "0.4s",
               }}
             >
-              FOTO
+              Photo
             </span>
           </div>
           {!showSettings && !isUploading && (
@@ -292,7 +292,7 @@ function Test() {
 
         {/* Progress Bar for Upload */}
         {isUploading && (
-          <div className="w-full max-w-6xl mb-6">
+          <div className="max-w-3xl mb-6">
             <div className="bg-gray-700 rounded-full h-6 overflow-hidden border-2 border-white">
               <motion.div
                 className="bg-gradient-to-r from-green-400 to-blue-500 h-full rounded-full flex items-center justify-center"
@@ -317,70 +317,9 @@ function Test() {
           </div>
         )}
 
-        {/* Settings Panel */}
-        {showSettings && (
-          <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl mb-6 border-2 border-purple-300 shadow-lg max-w-4xl w-full">
-            <div className="flex gap-6 items-end justify-center">
-              <div className="flex-1 max-w-xs">
-                <label
-                  htmlFor="layout-select"
-                  className="text-purple-800 text-sm mb-2 block font-bold"
-                  style={{ fontFamily: '"Press Start 2P", monospace' }}
-                >
-                  PILIH POSE
-                </label>
-                <select
-                  id="layout-select"
-                  value={selectedLayout.name}
-                  onChange={handleLayoutChange}
-                  className="w-full p-3 rounded-lg bg-purple-100 text-purple-800 border-2 border-purple-300 focus:border-purple-500 focus:outline-none text-sm font-bold"
-                  style={{ fontFamily: '"Press Start 2P", monospace' }}
-                >
-                  {photoLayouts.map((layout) => (
-                    <option key={layout.name} value={layout.name}>
-                      {layout.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex-1 max-w-xs">
-                <label
-                  htmlFor="delay-select"
-                  className="text-purple-800 text-sm mb-2 block font-bold"
-                  style={{ fontFamily: '"Press Start 2P", monospace' }}
-                >
-                  PILIH DELAY
-                </label>
-                <select
-                  id="delay-select"
-                  value={selectedDelay}
-                  onChange={handleDelayChange}
-                  className="w-full p-3 rounded-lg bg-purple-100 text-purple-800 border-2 border-purple-300 focus:border-purple-500 focus:outline-none text-sm font-bold"
-                  style={{ fontFamily: '"Press Start 2P", monospace' }}
-                >
-                  {delayOptions.map((d) => (
-                    <option key={d.value} value={d.value}>
-                      {d.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                onClick={startPhotoSession}
-                className="px-8 py-3 rounded-lg text-sm bg-green-600 hover:bg-green-700 text-white font-bold transition-all duration-200 hover:scale-105 active:scale-95"
-                style={{ fontFamily: '"Press Start 2P", monospace' }}
-              >
-                MULAI
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Session Progress Bar */}
         {!showSettings && !isUploading && (
-          <div className="w-full max-w-6xl bg-white/50 rounded-full h-4 mb-6">
+          <div className="w-full max-w-3xl bg-white/50 rounded-full h-4 mb-6">
             <div
               className="bg-purple-600 h-4 rounded-full transition-all duration-500"
               style={{
@@ -394,9 +333,9 @@ function Test() {
 
         {/* Camera Box */}
         {!isUploading && (
-          <div className="w-full max-w-6xl bg-gray-900 rounded-2xl overflow-hidden border-4 border-purple-500 shadow-2xl">
+          <div className="w-full max-w-3xl bg-gray-900 rounded-2xl overflow-hidden border-4 border-purple-500 shadow-2xl">
             {/* Camera Header */}
-            <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-4">
+            <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-2">
               <div className="flex items-center justify-center space-x-2">
                 <Camera className="text-white" size={24} />
                 <span className="text-white font-bold text-lg">
@@ -406,7 +345,7 @@ function Test() {
             </div>
 
             {/* Camera View */}
-            <div className="relative bg-black" style={{ aspectRatio: "21/9" }}>
+            <div className="relative bg-black" style={{ aspectRatio: "16/9" }}>
               <Webcam
                 ref={webcamRef}
                 screenshotFormat="image/jpeg"
@@ -450,7 +389,7 @@ function Test() {
             </div>
 
             {/* Controls */}
-            <div className="bg-gray-800 p-6">
+            <div className="bg-gray-800 p-2">
               {showSettings ? (
                 <div className="flex justify-center">
                   <div className="flex items-center space-x-2 text-white">
@@ -479,14 +418,6 @@ function Test() {
                 </div>
               ) : (
                 <div className="flex justify-center space-x-4">
-                  <button
-                    onClick={switchCamera}
-                    className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-full font-bold transition-all duration-200 hover:scale-105 active:scale-95"
-                  >
-                    <RotateCcw size={20} />
-                    <span>Switch</span>
-                  </button>
-
                   {capturedImages.length > 0 &&
                     currentPhotoIndex < selectedLayout.totalPhoto && (
                       <button
@@ -494,7 +425,6 @@ function Test() {
                         className="flex items-center space-x-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full font-bold transition-all duration-200 hover:scale-105 active:scale-95"
                       >
                         <RotateCcw size={20} />
-                        <span>ULANGI</span>
                       </button>
                     )}
 
@@ -505,7 +435,6 @@ function Test() {
                       className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white px-8 py-4 rounded-full font-bold text-xl transition-all duration-200 shadow-lg hover:scale-105 active:scale-95 animate-pulse"
                     >
                       <Camera size={24} />
-                      <span>{isCapturing ? "BERSIAP..." : "AMBIL FOTO"}</span>
                     </button>
                   )}
 
@@ -514,10 +443,64 @@ function Test() {
                     className="flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full font-bold transition-all duration-200 hover:scale-105 active:scale-95"
                   >
                     <Settings size={20} />
-                    <span>RESET</span>
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Settings Panel - Now positioned below camera */}
+        {showSettings && (
+          <div className="bg-transparent  p-2 rounded-2xl mt-2 w-1/2 mb-6">
+            <div className="flex gap-6 items-end justify-center">
+              <div className="flex-1 max-w-xs">
+                {/* The disabled option is displayed first */}
+                <select
+                  id="layout-select"
+                  value={selectedLayout.name}
+                  onChange={handleLayoutChange}
+                  className="w-full p-3 rounded-lg bg-purple-100 text-purple-800 border-2 border-purple-300 focus:border-purple-500 focus:outline-none text-sm font-bold"
+                  style={{ fontFamily: '"Press Start 2P", monospace' }}
+                >
+                  <option value={3} disabled>
+                    Pilih Pose
+                  </option>
+                  {photoLayouts.map((layout) => (
+                    <option key={layout.name} value={layout.name}>
+                      {layout.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex-1 max-w-xs">
+                {/* The disabled option for delay */}
+                <select
+                  id="delay-select"
+                  value={selectedDelay}
+                  onChange={handleDelayChange}
+                  className="w-full p-3 rounded-lg bg-purple-100 text-purple-800 border-2 border-purple-300 focus:border-purple-500 focus:outline-none text-sm font-bold"
+                  style={{ fontFamily: '"Press Start 2P", monospace' }}
+                >
+                  <option value={1} disabled>
+                    Pilih Delay
+                  </option>
+                  {delayOptions.map((d) => (
+                    <option key={d.value} value={d.value}>
+                      {d.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                onClick={startPhotoSession}
+                className="px-8 py-3 rounded-lg text-sm bg-purple-800 hover:bg-purple-700 text-white font-bold transition-all duration-200 hover:scale-105 active:scale-95"
+                style={{ fontFamily: '"Press Start 2P", monospace' }}
+              >
+                MULAI
+              </button>
             </div>
           </div>
         )}

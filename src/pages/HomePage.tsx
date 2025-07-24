@@ -124,12 +124,20 @@ function HomePage() {
       >
         <div className="flex items-center justify-center space-x-4 mb-4">
           <motion.div
-            animate={{ rotate: [0, 15, -15, 0] }}
+            className="text-4xl md:text-6xl font-bold text-white tracking-wider"
+            style={{ fontFamily: '"Press Start 2P", monospace' }}
+            animate={{
+              rotate: [0, -15, 15, 0],
+              textShadow: [
+                "0 0 10px #a855f7, 0 0 20px #a855f7",
+                "0 0 20px #a855f7, 0 0 30px #a855f7",
+                "0 0 10px #a855f7, 0 0 20px #a855f7",
+              ],
+            }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            <img src={left} alt="Left Arrow" className="w-16 h-16" />
+            &gt;
           </motion.div>
-
           <motion.h1
             className="text-4xl md:text-6xl font-bold text-white tracking-wider"
             style={{ fontFamily: '"Press Start 2P", monospace' }}
@@ -146,10 +154,19 @@ function HomePage() {
           </motion.h1>
 
           <motion.div
-            animate={{ rotate: [0, -15, 15, 0] }}
+            className="text-4xl md:text-6xl font-bold text-white tracking-wider"
+            style={{ fontFamily: '"Press Start 2P", monospace' }}
+            animate={{
+              rotate: [0, -15, 15, 0],
+              textShadow: [
+                "0 0 10px #a855f7, 0 0 20px #a855f7",
+                "0 0 20px #a855f7, 0 0 30px #a855f7",
+                "0 0 10px #a855f7, 0 0 20px #a855f7",
+              ],
+            }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            <img src={right} alt="Right Arrow" className="w-16 h-16" />
+            &lt;
           </motion.div>
         </div>
       </motion.div>

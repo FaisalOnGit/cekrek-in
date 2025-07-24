@@ -140,7 +140,7 @@ function ResultPage() {
         </div>
         <div className="text-3xl md:text-4xl font-bold mb-4 tracking-wider">
           <span
-            className="text-green-500 drop-shadow-lg animate-bounce"
+            className="text-blue-800 drop-shadow-lg animate-bounce"
             style={{
               textShadow: "3px 3px 0px #333",
               animationDelay: "0.2s",
@@ -149,9 +149,9 @@ function ResultPage() {
             FOTO
           </span>
           <span
-            className="ml-4 text-yellow-500 drop-shadow-lg animate-bounce"
+            className="ml-4 text-orange-500 drop-shadow-lg animate-bounce"
             style={{
-              textShadow: "3px 3px 0px #cc8800",
+              textShadow: "3px 3px 0px #cc5500",
               animationDelay: "0.4s",
             }}
           >

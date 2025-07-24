@@ -13,6 +13,10 @@ import bulan from "/bulan.png";
 function PayPage() {
   const navigate = useNavigate();
 
+  const handleClick = () => {
+    navigate("/template");
+  };
+
   const cloudData = [
     { src: awan1, top: "10%", left: "5%", size: "w-16 md:w-24", delay: 0 },
     { src: awan2, top: "20%", right: "10%", size: "w-20 md:w-28", delay: 0.5 },
@@ -157,7 +161,7 @@ function PayPage() {
         <button
           className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-black rounded-lg text-sm tracking-wider transition-all"
           style={{ fontFamily: '"Press Start 2P", monospace' }}
-          onClick={() => alert("Fitur input voucher coming soon!")}
+          onClick={handleClick}
         >
           Use
         </button>
