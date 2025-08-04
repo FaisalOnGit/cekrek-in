@@ -17,9 +17,9 @@ function App() {
       <Route path="/pay" element={<PayPage />} />
       <Route path="/template" element={<ChooseTemplatePage />} />
       <Route path="/photo" element={<PhotoPage />} />
-      <Route path="/capture" element={<PhotoCapturePage />} />
+      <Route path="/capture1" element={<PhotoCapturePage />} />
       <Route path="/result" element={<ResultPage />} />
-      <Route path="/test" element={<Test />} />
+      <Route path="/capture" element={<Test />} />
 
       {/* Dashboard */}
       <Route path="/dashboard" element={<Dashboard />} />

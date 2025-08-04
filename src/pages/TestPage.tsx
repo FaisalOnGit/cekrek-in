@@ -128,14 +128,18 @@ function Test() {
         formData.append("photos", file, `photo${index + 1}.jpg`);
       });
 
-      // Using fetch instead of axios to avoid external dependencies
-      const response = await fetch("http://localhost:8888/process/1", {
-        method: "POST",
-        headers: {
-          accept: "application/json",
-        },
-        body: formData,
-      });
+      const selectedTemplateId = localStorage.getItem("selectedTemplateId");
+
+      const response = await fetch(
+        `http://localhost:8888/process/${selectedTemplateId}`,
+        {
+          method: "POST",
+          headers: {
+            accept: "application/json",
+          },
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

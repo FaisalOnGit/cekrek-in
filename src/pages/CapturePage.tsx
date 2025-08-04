@@ -181,13 +181,14 @@ function PhotoCapturePage() {
       });
 
       const response = await axios.post(
-        "http://localhost:8888/process/1",
+        "http://localhost:8888/process/2",
         formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
             accept: "application/json",
           },
+          withCredentials: true,
         }
       );
 

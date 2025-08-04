@@ -31,7 +31,7 @@ function ChooseTemplatePage() {
 
   const handleSelect = (templateId: string) => {
     localStorage.setItem("selectedTemplateId", templateId);
-    navigate("/photo");
+    navigate("/capture");
   };
 
   return (
