@@ -10,8 +10,6 @@ import awan3 from "/awan3.png";
 import awan4 from "/awan4.png";
 import awan5 from "/awan5.png";
 import bulan from "/bulan.png";
-import left from "/left.png";
-import right from "/right.png";
 
 function HomePage() {
   const navigate = useNavigate();
