@@ -15,9 +15,10 @@ function ResultPage() {
   const [result, setResult] = useState<ProcessResult | null>(null);
   const [capturedPhotos, setCapturedPhotos] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [gifBlob, setGifBlob] = useState<Blob | null>(null);
+  const [isGeneratingGif, setIsGeneratingGif] = useState(false);
 
   useEffect(() => {
-    // Get result from navigation state or localStorage as fallback
     const stateData = location.state as {
       result: ProcessResult;
       capturedPhotos: string[];
@@ -27,51 +28,156 @@ function ResultPage() {
       setResult(stateData.result);
       setCapturedPhotos(stateData.capturedPhotos);
     } else {
-      // Fallback to localStorage (for smaller data)
       const savedPhotos = localStorage.getItem("capturedPhotos");
       if (savedPhotos) {
         setCapturedPhotos(JSON.parse(savedPhotos));
       }
 
-      // If no data available, redirect back
       if (!savedPhotos) {
         navigate("/capture");
         return;
       }
     }
 
-    // Simulate loading time for better UX
     setTimeout(() => {
       setIsLoading(false);
     }, 1500);
   }, [location.state, navigate]);
 
+  // Fungsi untuk membuat GIF dari captured photos
+  const createGifFromPhotos = async (photos: string[]): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      try {
+        // Import GIF.js library (harus ditambahkan ke project)
+        // npm install gif.js atau gunakan CDN
+        const GIF = (window as any).GIF;
+
+        if (!GIF) {
+          throw new Error(
+            "GIF.js library not found. Please add it to your project."
+          );
+        }
+
+        const gif = new GIF({
+          workers: 2,
+          quality: 10,
+          delay: 50,
+          width: 640,
+          height: 480,
+        });
+
+        let loadedImages = 0;
+        const totalImages = photos.length;
+
+        photos.forEach((photoSrc, index) => {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+
+          img.onload = () => {
+            // Create canvas to resize image if needed
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+
+            canvas.width = 640;
+            canvas.height = 480;
+
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              gif.addFrame(canvas, { delay: 50 });
+            }
+
+            loadedImages++;
+
+            if (loadedImages === totalImages) {
+              gif.on("finished", (blob: Blob) => {
+                resolve(blob);
+              });
+
+              gif.render();
+            }
+          };
+
+          img.onerror = () => {
+            reject(new Error(`Failed to load image ${index + 1}`));
+          };
+
+          img.src = photoSrc;
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
+
+  // Generate GIF when photos are available
+  useEffect(() => {
+    if (capturedPhotos.length > 0 && !gifBlob && !isGeneratingGif) {
+      generateGif();
+    }
+  }, [capturedPhotos]);
+
+  const generateGif = async () => {
+    if (capturedPhotos.length === 0) return;
+
+    setIsGeneratingGif(true);
+    try {
+      const blob = await createGifFromPhotos(capturedPhotos);
+      setGifBlob(blob);
+    } catch (error) {
+      console.error("Error generating GIF:", error);
+      // Show error message to user
+      alert("Gagal membuat GIF. Pastikan library GIF.js sudah diinstall.");
+    } finally {
+      setIsGeneratingGif(false);
+    }
+  };
+
+  const handleDownloadGif = () => {
+    if (gifBlob) {
+      const url = URL.createObjectURL(gifBlob);
+      const link = document.createElement("a");
+      link.download = `cekrek-animation-${Date.now()}.gif`;
+      link.href = url;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
   const handleDownload = () => {
     if (result?.image_base64) {
-      const link = document.createElement("a");
-      link.href = `data:image/png;base64,${result.image_base64}`;
-      link.download = `photobooth-result-${Date.now()}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const base64Image = result.image_base64;
+
+      fetch("http://localhost:3000/save-image", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ base64Image }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.message === "Image saved successfully") {
+            alert("Image saved successfully to the folder!");
+          } else {
+            alert("Error saving image!");
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("Error saving image!");
+        });
     }
   };
 
   const handleNewSession = () => {
-    // Clear localStorage
     localStorage.removeItem("capturedPhotos");
     localStorage.removeItem("selectedLayout");
-
-    // Navigate back to photo capture
     navigate("/capture");
   };
 
   const handleBackToTemplate = () => {
-    // Clear localStorage
     localStorage.removeItem("capturedPhotos");
     localStorage.removeItem("selectedLayout");
-
-    // Navigate back to template selection
     navigate("/template");
   };
 
@@ -167,8 +273,9 @@ function ResultPage() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.3 }}
       >
-        {/* Original Photos */}
-        <div className="flex-1">
+        {/* Original Photos and GIF */}
+        <div className="flex-1 space-y-4">
+          {/* Original Photos */}
           <div className="bg-black bg-opacity-60 p-4 rounded-lg border-2 border-white">
             <h3
               className="text-white text-lg mb-4 text-center"
@@ -193,6 +300,70 @@ function ResultPage() {
                 </motion.div>
               ))}
             </div>
+          </div>
+
+          {/* Animated GIF */}
+          <div className="bg-black bg-opacity-60 p-4 rounded-lg border-2 border-white">
+            <h3
+              className="text-white text-lg mb-4 text-center"
+              style={{ fontFamily: '"Press Start 2P", monospace' }}
+            >
+              ANIMASI GIF
+            </h3>
+            {isGeneratingGif ? (
+              <div className="aspect-video bg-gray-700 rounded-lg flex items-center justify-center border-2 border-gray-500">
+                <div className="text-center">
+                  <motion.div
+                    className="w-8 h-8 border-4 border-white border-t-transparent rounded-full mx-auto mb-2"
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                  />
+                  <p
+                    className="text-gray-400 text-xs"
+                    style={{ fontFamily: '"Press Start 2P", monospace' }}
+                  >
+                    MEMBUAT GIF...
+                  </p>
+                </div>
+              </div>
+            ) : gifBlob ? (
+              <motion.div
+                className="border-4 border-green-400 rounded-lg overflow-hidden shadow-2xl"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <img
+                  src={URL.createObjectURL(gifBlob)}
+                  alt="Animated GIF"
+                  className="w-full h-auto"
+                />
+              </motion.div>
+            ) : (
+              <div className="aspect-video bg-gray-700 rounded-lg flex items-center justify-center border-2 border-gray-500">
+                <div className="text-center">
+                  <p
+                    className="text-gray-400 text-xs"
+                    style={{ fontFamily: '"Press Start 2P", monospace' }}
+                  >
+                    GIF TIDAK
+                    <br />
+                    TERSEDIA
+                  </p>
+                  <button
+                    onClick={generateGif}
+                    className="mt-2 px-4 py-2 bg-green-600 text-white text-xs rounded"
+                    style={{ fontFamily: '"Press Start 2P", monospace' }}
+                  >
+                    BUAT GIF
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -250,6 +421,18 @@ function ResultPage() {
             whileTap={{ scale: 0.95 }}
           >
             DOWNLOAD
+          </motion.button>
+        )}
+
+        {gifBlob && (
+          <motion.button
+            onClick={handleDownloadGif}
+            className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-4 rounded-lg text-lg border-2 border-pink-400"
+            style={{ fontFamily: '"Press Start 2P", monospace' }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            DOWNLOAD GIF
           </motion.button>
         )}
 
