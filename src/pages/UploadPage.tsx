@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Upload,
-  RotateCcw,
   RefreshCw,
   ArrowLeft,
   Image,
@@ -12,7 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import axios from "axios";
-import bgfinal from "/bg-final.png";
+
 import bg from "/bg2.png";
 
 interface PhotoLayout {
@@ -169,7 +168,6 @@ function PhotoUploadPage() {
             "Content-Type": "multipart/form-data",
             accept: "application/json",
           },
-          withCredentials: true,
         }
       );
 

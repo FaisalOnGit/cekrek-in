@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import bg from "/bg2.png";
+import { convertToGif } from "../utils/gifCoverter";
 
 interface ProcessResult {
   image_base64?: string;
@@ -44,71 +45,6 @@ function ResultPage() {
     }, 1500);
   }, [location.state, navigate]);
 
-  // Fungsi untuk membuat GIF dari captured photos
-  const createGifFromPhotos = async (photos: string[]): Promise<Blob> => {
-    return new Promise((resolve, reject) => {
-      try {
-        // Import GIF.js library (harus ditambahkan ke project)
-        // npm install gif.js atau gunakan CDN
-        const GIF = (window as any).GIF;
-
-        if (!GIF) {
-          throw new Error(
-            "GIF.js library not found. Please add it to your project."
-          );
-        }
-
-        const gif = new GIF({
-          workers: 2,
-          quality: 10,
-          delay: 50,
-          width: 640,
-          height: 480,
-        });
-
-        let loadedImages = 0;
-        const totalImages = photos.length;
-
-        photos.forEach((photoSrc, index) => {
-          const img = new Image();
-          img.crossOrigin = "anonymous";
-
-          img.onload = () => {
-            // Create canvas to resize image if needed
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
-
-            canvas.width = 640;
-            canvas.height = 480;
-
-            if (ctx) {
-              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-              gif.addFrame(canvas, { delay: 50 });
-            }
-
-            loadedImages++;
-
-            if (loadedImages === totalImages) {
-              gif.on("finished", (blob: Blob) => {
-                resolve(blob);
-              });
-
-              gif.render();
-            }
-          };
-
-          img.onerror = () => {
-            reject(new Error(`Failed to load image ${index + 1}`));
-          };
-
-          img.src = photoSrc;
-        });
-      } catch (error) {
-        reject(error);
-      }
-    });
-  };
-
   // Generate GIF when photos are available
   useEffect(() => {
     if (capturedPhotos.length > 0 && !gifBlob && !isGeneratingGif) {
@@ -120,13 +56,39 @@ function ResultPage() {
     if (capturedPhotos.length === 0) return;
 
     setIsGeneratingGif(true);
+
+    // Convert captured photos from data URL to File objects for gifshot
+    const imageFiles = capturedPhotos.map((photo) => {
+      const byteString = atob(photo.split(",")[1]); // Decode base64 string
+      const mimeString = photo.split(",")[0].split(":")[1].split(";")[0]; // Get mime type
+      const buffer = new ArrayBuffer(byteString.length);
+      const view = new Uint8Array(buffer);
+
+      for (let i = 0; i < byteString.length; i++) {
+        view[i] = byteString.charCodeAt(i);
+      }
+
+      return new File([buffer], `image-${Date.now()}.png`, {
+        type: mimeString,
+      });
+    });
+
     try {
-      const blob = await createGifFromPhotos(capturedPhotos);
+      // Call the convertToGif function with the image files
+      const gifUrl = await convertToGif(imageFiles, {
+        width: 640,
+        height: 480,
+        frameDuration: 0.5,
+        quality: 10,
+      });
+
+      // Convert the result from URL to Blob and set it
+      const response = await fetch(gifUrl);
+      const blob = await response.blob();
       setGifBlob(blob);
     } catch (error) {
       console.error("Error generating GIF:", error);
-      // Show error message to user
-      alert("Gagal membuat GIF. Pastikan library GIF.js sudah diinstall.");
+      alert("Gagal membuat GIF. Pastikan library gifshot sudah diinstall.");
     } finally {
       setIsGeneratingGif(false);
     }
