@@ -5,11 +5,12 @@ import PayPage from "./pages/PayPage";
 import ChooseTemplatePage from "./pages/PlayPage";
 import PhotoPage from "./pages/PhotoPage";
 import PhotoCapturePage from "./pages/CapturePage";
-import Dashboard from "./pages/DashboardPage";
+import Dashboard from "./pages/dashboard/DashboardPage";
 import Test from "./pages/TestPage";
 import ResultPage from "./pages/ResultPage";
 import PhotoUploadPage from "./pages/UploadPage";
 import LayoutPage from "./pages/LayoutPage";
+import SetupPage from "./pages/dashboard/Setup";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
 
       {/* Dashboard */}
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/dashboard/setup" element={<SetupPage />} />
     </Routes>
   );
 }

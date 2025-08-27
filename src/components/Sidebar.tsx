@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -15,11 +16,13 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
+  const location = useLocation();
+
   const menuItems = [
-    { icon: LayoutDashboard, label: "Dashboard", active: true },
-    { icon: ShoppingCart, label: "Orders", active: false },
-    { icon: Users, label: "Customers", active: false },
-    { icon: FileText, label: "Template", active: false },
+    { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+    { icon: ShoppingCart, label: "Orders", path: "/dashboard/orders" },
+    { icon: Users, label: "Customers", path: "/dashboard/customers" },
+    { icon: FileText, label: "Template", path: "/dashboard/setup" }, // 🔥 arahkan ke Setup
   ];
 
   return (
@@ -29,8 +32,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
       } bg-[#452C7D] text-white flex flex-col transition-all duration-300 fixed h-full z-50`}
     >
       {/* Logo */}
-      <div className="p-6  flex items-center justify-between">
-        {!collapsed && (
+      <div className="p-6 flex items-center justify-between">
+        {!collapsed ? (
           <>
             <h1
               style={{ fontFamily: '"Press Start 2P", monospace' }}
@@ -45,9 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
               <ChevronLeft className="w-5 h-5" />
             </button>
           </>
-        )}
-
-        {collapsed && (
+        ) : (
           <div className="w-full flex justify-center">
             <button
               onClick={onToggle}
@@ -62,36 +63,39 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
-        {menuItems.map((item, index) => (
-          <a
-            key={index}
-            href="#"
-            className={`flex items-center ${
-              collapsed ? "justify-center px-2" : "space-x-3 px-4"
-            } py-3 rounded-lg transition-all duration-200 group relative ${
-              item.active
-                ? "bg-white/20 text-white shadow-lg"
-                : "text-purple-200 hover:bg-white/10 hover:text-white"
-            }`}
-            title={collapsed ? item.label : ""}
-          >
-            <item.icon className="w-5 h-5 flex-shrink-0" />
-            {!collapsed && <span className="font-medium">{item.label}</span>}
+        {menuItems.map((item, index) => {
+          const active = location.pathname === item.path;
+          return (
+            <Link
+              key={index}
+              to={item.path}
+              className={`flex items-center ${
+                collapsed ? "justify-center px-2" : "space-x-3 px-4"
+              } py-3 rounded-lg transition-all duration-200 group relative ${
+                active
+                  ? "bg-white/20 text-white shadow-lg"
+                  : "text-purple-200 hover:bg-white/10 hover:text-white"
+              }`}
+              title={collapsed ? item.label : ""}
+            >
+              <item.icon className="w-5 h-5 flex-shrink-0" />
+              {!collapsed && <span className="font-medium">{item.label}</span>}
 
-            {/* Tooltip for collapsed state */}
-            {collapsed && (
-              <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                {item.label}
-              </div>
-            )}
-          </a>
-        ))}
+              {/* Tooltip for collapsed state */}
+              {collapsed && (
+                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                  {item.label}
+                </div>
+              )}
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Logout */}
       <div className="p-4">
-        <a
-          href="#"
+        <Link
+          to="/logout"
           className={`flex items-center ${
             collapsed ? "justify-center px-2" : "space-x-3 px-4"
           } py-3 rounded-lg text-purple-200 hover:bg-white/10 hover:text-white transition-all duration-200 group relative`}
@@ -99,14 +103,12 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />
           {!collapsed && <span className="font-medium">Logout</span>}
-
-          {/* Tooltip for collapsed state */}
           {collapsed && (
             <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
               Logout
             </div>
           )}
-        </a>
+        </Link>
       </div>
     </div>
   );
