@@ -42,6 +42,7 @@ function Test() {
   const [result, setResult] = useState<any>(null);
 
   const webcamRef = useRef<Webcam>(null);
+  const BASE_URL = import.meta.env.VITE_BASE_API_URL;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -131,7 +132,7 @@ function Test() {
       const selectedTemplateId = localStorage.getItem("selectedTemplateId");
 
       const response = await fetch(
-        `http://localhost:8888/process/${selectedTemplateId}`,
+        `${BASE_URL}/process/${selectedTemplateId}`,
         {
           method: "POST",
           headers: {

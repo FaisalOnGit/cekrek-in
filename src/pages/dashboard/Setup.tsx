@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Layout from "../../layout/Layout";
-import AddTemplateModal from "../../components/addTemplateModal";
+import AddTemplateModal from "../../components/AddTemplateModal";
 
 interface Template {
   id: number;
@@ -15,13 +15,12 @@ function SetupPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const BASE_URL = import.meta.env.VITE_BASE_API_URL;
 
   const fetchTemplates = async () => {
     try {
       setLoading(true);
-      const res = await axios.get<Template[]>(
-        "http://localhost:8888/templates"
-      );
+      const res = await axios.get<Template[]>(`${BASE_URL}/templates`);
       setTemplates(res.data);
     } catch (err) {
       setError("Gagal memuat template");

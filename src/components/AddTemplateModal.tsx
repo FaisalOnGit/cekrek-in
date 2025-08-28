@@ -16,6 +16,7 @@ function AddTemplateModal({
   const [detectionMethod, setDetectionMethod] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const BASE_URL = import.meta.env.VITE_BASE_API_URL;
 
   if (!isOpen) return null;
 
@@ -39,7 +40,7 @@ function AddTemplateModal({
       formData.append("detection_method", detectionMethod);
       formData.append("file", file);
 
-      await axios.post("http://localhost:8888/templates", formData, {
+      await axios.post(`${BASE_URL}/templates`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

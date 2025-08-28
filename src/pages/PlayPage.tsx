@@ -15,9 +15,10 @@ function ChooseTemplatePage() {
   const navigate = useNavigate();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const BASE_URL = import.meta.env.VITE_BASE_API_URL;
 
   useEffect(() => {
-    fetch("http://localhost:8888/templates/")
+    fetch(`${BASE_URL}/templates`)
       .then((res) => res.json())
       .then((data: Template[]) => {
         setTemplates(data);

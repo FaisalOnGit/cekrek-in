@@ -122,6 +122,7 @@ function PhotoUploadPage() {
   };
 
   const handleBack = () => navigate("/template");
+  const BASE_URL = import.meta.env.VITE_BASE_API_URL;
 
   const handleLayoutChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const layout = photoLayouts.find((l) => l.name === e.target.value);
@@ -161,7 +162,7 @@ function PhotoUploadPage() {
 
       const selectedTemplateId = localStorage.getItem("selectedTemplateId");
       const response = await axios.post(
-        `http://localhost:8888/process/${selectedTemplateId}`,
+        `${BASE_URL}/process/${selectedTemplateId}`,
         formData,
         {
           headers: {

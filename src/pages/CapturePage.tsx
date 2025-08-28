@@ -55,8 +55,9 @@ function PhotoCapturePage() {
   const [isCapturing, setIsCapturing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
-  const [isUploading, setIsUploading] = useState(false); // Loading state
-  const [uploadProgress, setUploadProgress] = useState(0); // Progress percentage
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const BASE_URL = import.meta.env.VITE_BASE_API_URL;
 
   const webcamProps = {
     audio: false,
@@ -182,7 +183,7 @@ function PhotoCapturePage() {
 
       const selectedTemplateId = localStorage.getItem("selectedTemplateId");
       const response = await axios.post(
-        `http://localhost:8888/process/${selectedTemplateId}`,
+        `${BASE_URL}/process/${selectedTemplateId}`,
         formData,
         {
           headers: {
