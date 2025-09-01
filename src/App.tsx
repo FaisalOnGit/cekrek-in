@@ -11,6 +11,7 @@ import ResultPage from "./pages/ResultPage";
 import PhotoUploadPage from "./pages/UploadPage";
 import LayoutPage from "./pages/LayoutPage";
 import SetupPage from "./pages/dashboard/Setup";
+import EffectPage from "./pages/EffectPage";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
       <Route path="/result" element={<ResultPage />} />
       <Route path="/capture" element={<Test />} />
       <Route path="/upload" element={<PhotoUploadPage />} />
+      <Route path="/effect" element={<EffectPage />} />
 
       {/* Dashboard */}
       <Route path="/dashboard" element={<Dashboard />} />
