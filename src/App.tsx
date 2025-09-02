@@ -12,6 +12,7 @@ import PhotoUploadPage from "./pages/UploadPage";
 import LayoutPage from "./pages/LayoutPage";
 import SetupPage from "./pages/dashboard/Setup";
 import EffectPage from "./pages/EffectPage";
+import Login from "./pages/LoginPage";
 
 function App() {
   return (
@@ -27,6 +28,8 @@ function App() {
       <Route path="/capture" element={<Test />} />
       <Route path="/upload" element={<PhotoUploadPage />} />
       <Route path="/effect" element={<EffectPage />} />
+
+      <Route path="/login" element={<Login />} />
 
       {/* Dashboard */}
       <Route path="/dashboard" element={<Dashboard />} />

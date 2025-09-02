@@ -109,9 +109,10 @@ function ResultPage() {
     if (result?.image_base64) {
       const base64Image = result.image_base64;
 
-      fetch("http://localhost:3000/save-image", {
+      fetch("http://localhost:8888/save-image", {
         method: "POST",
         headers: {
+          accept: "application/json",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ base64Image }),
