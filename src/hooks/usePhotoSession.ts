@@ -8,9 +8,8 @@ export interface PhotoLayout {
 }
 
 export const photoLayouts: PhotoLayout[] = [
-  { name: "2 Pose", totalPhoto: 2 },
-  { name: "3 Pose", totalPhoto: 3 },
   { name: "4 Pose", totalPhoto: 4 },
+  { name: "6 Pose", totalPhoto: 6 },
 ];
 
 export const delayOptions = [
@@ -129,7 +128,7 @@ export const usePhotoSession = () => {
 
       // Navigate immediately to Result page with result data
       setTimeout(() => {
-        navigate("/result", {
+        navigate("/effect", {
           state: {
             result: data,
             capturedPhotos: photos,

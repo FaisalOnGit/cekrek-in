@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Mail, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import bgfinal from "/bg-final.png";
 import love from "/love.png";
 import awan1 from "/awan1.png";
@@ -12,6 +13,7 @@ import cut from "/cut.png";
 import noCut from "/nocut.png";
 
 function LayoutPage() {
+  const navigate = useNavigate();
   const cloudData = [
     { src: awan1, top: "10%", left: "5%", size: "w-16 md:w-24", delay: 0 },
     { src: awan2, top: "20%", right: "10%", size: "w-20 md:w-28", delay: 0.5 },
@@ -61,6 +63,11 @@ function LayoutPage() {
     />
   ));
 
+  const handleSelect = (type: "cut" | "nocut") => {
+    localStorage.setItem("layout", type);
+    navigate("/capture");
+  };
+
   return (
     <div
       className="min-h-screen bg-cover bg-center relative flex flex-col justify-center items-center"
@@ -97,7 +104,7 @@ function LayoutPage() {
         className="text-center mb-8"
       >
         <motion.button
-          className="text-2xl md:text-4xl text-white bg-transparent hover:bg-transparent transition-all cursor-pointer"
+          className="text-2xl md:text-5xl text-white bg-transparent hover:bg-transparent transition-all cursor-pointer"
           style={{ fontFamily: '"Press Start 2P", monospace' }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -116,7 +123,8 @@ function LayoutPage() {
       >
         {/* Cut Card */}
         <motion.div
-          className="bg-blue-500/50 backdrop-blur-md rounded-xl p-10 text-center cursor-pointer border border-white/20"
+          onClick={() => handleSelect("cut")}
+          className="bg-blue-500/50 backdrop-blur-md rounded-xl p-16 text-center cursor-pointer border border-white/20"
           whileHover={{
             scale: 1.05,
             backgroundColor: "rgba(255, 255, 255, 0.15)",
@@ -142,7 +150,8 @@ function LayoutPage() {
 
         {/* No Cut Card */}
         <motion.div
-          className="bg-red-600/50 backdrop-blur-md rounded-xl p-10 text-center cursor-pointer border border-white/20"
+          onClick={() => handleSelect("nocut")}
+          className="bg-red-600/50 backdrop-blur-md rounded-xl p-16 text-center cursor-pointer border border-white/20"
           whileHover={{
             scale: 1.05,
             backgroundColor: "rgba(255, 255, 255, 0.15)",

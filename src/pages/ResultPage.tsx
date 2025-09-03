@@ -14,7 +14,8 @@ function ResultPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [result, setResult] = useState<ProcessResult | null>(null);
-  const [capturedPhotos, setCapturedPhotos] = useState<string[]>([]);
+  const [originalPhotos, setOriginalPhotos] = useState<string[]>([]); // UBAH: untuk foto asli
+  const [processedPhotos, setProcessedPhotos] = useState<string[]>([]); // TAMBAH: untuk foto dengan effect
   const [isLoading, setIsLoading] = useState(true);
   const [gifBlob, setGifBlob] = useState<Blob | null>(null);
   const [isGeneratingGif, setIsGeneratingGif] = useState(false);
@@ -22,16 +23,20 @@ function ResultPage() {
   useEffect(() => {
     const stateData = location.state as {
       result: ProcessResult;
-      capturedPhotos: string[];
+      originalPhotos: string[]; // UBAH: terima foto asli
+      processedPhotos: string[]; // TAMBAH: terima foto dengan effect
     } | null;
 
     if (stateData) {
       setResult(stateData.result);
-      setCapturedPhotos(stateData.capturedPhotos);
+      setOriginalPhotos(stateData.originalPhotos || []);
+      setProcessedPhotos(stateData.processedPhotos || []);
     } else {
       const savedPhotos = localStorage.getItem("capturedPhotos");
       if (savedPhotos) {
-        setCapturedPhotos(JSON.parse(savedPhotos));
+        const photos = JSON.parse(savedPhotos);
+        setOriginalPhotos(photos);
+        setProcessedPhotos(photos); // Fallback jika tidak ada processed photos
       }
 
       if (!savedPhotos) {
@@ -45,20 +50,21 @@ function ResultPage() {
     }, 1500);
   }, [location.state, navigate]);
 
-  // Generate GIF when photos are available
+  // Generate GIF menggunakan processedPhotos (yang sudah ada effect)
   useEffect(() => {
-    if (capturedPhotos.length > 0 && !gifBlob && !isGeneratingGif) {
+    if (processedPhotos.length > 0 && !gifBlob && !isGeneratingGif) {
       generateGif();
     }
-  }, [capturedPhotos]);
+  }, [processedPhotos]);
 
   const generateGif = async () => {
-    if (capturedPhotos.length === 0) return;
+    if (processedPhotos.length === 0) return; // UBAH: gunakan processedPhotos
 
     setIsGeneratingGif(true);
 
-    // Convert captured photos from data URL to File objects for gifshot
-    const imageFiles = capturedPhotos.map((photo) => {
+    // Convert processed photos from data URL to File objects for gifshot
+    const imageFiles = processedPhotos.map((photo) => {
+      // UBAH: gunakan processedPhotos
       const byteString = atob(photo.split(",")[1]); // Decode base64 string
       const mimeString = photo.split(",")[0].split(":")[1].split(";")[0]; // Get mime type
       const buffer = new ArrayBuffer(byteString.length);
@@ -76,8 +82,8 @@ function ResultPage() {
     try {
       // Call the convertToGif function with the image files
       const gifUrl = await convertToGif(imageFiles, {
-        width: 640,
-        height: 480,
+        width: 756,
+        height: 720,
         frameDuration: 0.5,
         quality: 10,
       });
@@ -109,7 +115,10 @@ function ResultPage() {
     if (result?.image_base64) {
       const base64Image = result.image_base64;
 
-      fetch("http://localhost:8888/save-image", {
+      // 🔥 ambil mode dari localStorage
+      const mode = localStorage.getItem("layout") || "cut";
+
+      fetch(`http://localhost:8888/save-image/?mode=${mode}`, {
         method: "POST",
         headers: {
           accept: "application/json",
@@ -236,28 +245,28 @@ function ResultPage() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.3 }}
       >
-        {/* Original Photos and GIF */}
+        {/* Photos with Effects and GIF */}
         <div className="flex-1 space-y-4">
-          {/* Original Photos */}
-          <div className="bg-black bg-opacity-60 p-4 rounded-lg border-2 border-white">
+          {/* Photos with Effects */}
+          <div className="bg-black bg-opacity-60 p-4 rounded-lg border-2 border-blue-400">
             <h3
-              className="text-white text-lg mb-4 text-center"
+              className="text-blue-400 text-lg mb-4 text-center"
               style={{ fontFamily: '"Press Start 2P", monospace' }}
             >
-              FOTO ASLI
+              FOTO DENGAN EFFECT
             </h3>
             <div className="grid grid-cols-2 gap-2">
-              {capturedPhotos.map((photo, idx) => (
+              {processedPhotos.map((photo, idx) => (
                 <motion.div
                   key={idx}
-                  className="aspect-video border-2 border-gray-400 rounded overflow-hidden"
+                  className="aspect-[756/720] border-2 border-blue-400 rounded overflow-hidden"
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.1 * idx }}
                 >
                   <img
                     src={photo}
-                    alt={`Original Photo ${idx + 1}`}
+                    alt={`Processed Photo ${idx + 1}`}
                     className="w-full h-full object-cover"
                   />
                 </motion.div>
@@ -271,10 +280,10 @@ function ResultPage() {
               className="text-white text-lg mb-4 text-center"
               style={{ fontFamily: '"Press Start 2P", monospace' }}
             >
-              ANIMASI GIF
+              ANIMASI GIF (DENGAN EFFECT)
             </h3>
             {isGeneratingGif ? (
-              <div className="aspect-video bg-gray-700 rounded-lg flex items-center justify-center border-2 border-gray-500">
+              <div className="aspect-[756/720] bg-gray-700 rounded-lg flex items-center justify-center border-2 border-gray-500">
                 <div className="text-center">
                   <motion.div
                     className="w-8 h-8 border-4 border-white border-t-transparent rounded-full mx-auto mb-2"
@@ -302,12 +311,12 @@ function ResultPage() {
               >
                 <img
                   src={URL.createObjectURL(gifBlob)}
-                  alt="Animated GIF"
+                  alt="Animated GIF with Effects"
                   className="w-full h-auto"
                 />
               </motion.div>
             ) : (
-              <div className="aspect-video bg-gray-700 rounded-lg flex items-center justify-center border-2 border-gray-500">
+              <div className="aspect-[756/720] bg-gray-700 rounded-lg flex items-center justify-center border-2 border-gray-500">
                 <div className="text-center">
                   <p
                     className="text-gray-400 text-xs"

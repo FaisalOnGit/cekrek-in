@@ -65,7 +65,7 @@ function PhotoCapturePage() {
     mirrored: true,
     videoConstraints: {
       facingMode: "user",
-      width: 1280,
+      width: 756,
       height: 720,
     },
   };

@@ -35,7 +35,11 @@ const CameraBox = ({
   onRetakePhoto,
   onResetSession,
 }: CameraBoxProps) => {
-  const videoConstraints = { facingMode };
+  const videoConstraints = {
+    width: 756,
+    height: 720,
+    facingMode,
+  };
 
   const renderControls = () => {
     if (showSettings) {
@@ -113,7 +117,7 @@ const CameraBox = ({
       </div>
 
       {/* Camera View */}
-      <div className="relative bg-black" style={{ aspectRatio: "16/9" }}>
+      <div className="relative bg-black" style={{ aspectRatio: "756 / 720" }}>
         <Webcam
           ref={webcamRef}
           screenshotFormat="image/jpeg"

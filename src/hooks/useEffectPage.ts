@@ -102,7 +102,8 @@ export const useEffectPage = () => {
         navigate("/result", {
           state: {
             result: data,
-            capturedPhotos: processedImages, // Use processed images
+            originalPhotos: capturedPhotos, // TAMBAH: foto asli
+            processedPhotos: processedImages, // TAMBAH: foto dengan effect
             effectUsed: selectedEffect,
           },
         });
