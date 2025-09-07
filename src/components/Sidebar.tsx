@@ -7,6 +7,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  BadgePercent,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -21,8 +22,9 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
     { icon: ShoppingCart, label: "Orders", path: "/dashboard/orders" },
+    { icon: BadgePercent, label: "Setup", path: "/dashboard/rate" },
+    { icon: FileText, label: "Template", path: "/dashboard/setup" },
     { icon: Users, label: "Customers", path: "/dashboard/customers" },
-    { icon: FileText, label: "Template", path: "/dashboard/setup" }, // 🔥 arahkan ke Setup
   ];
 
   return (

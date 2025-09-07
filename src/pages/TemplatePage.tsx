@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import bgfinal from "/bg-final.png";
 import bg from "/bg-temp.png";
 
 // Tentukan tipe untuk template
@@ -11,7 +10,7 @@ type Template = {
   image_base64: string;
 };
 
-function ChooseTemplatePage() {
+function TemplatePage() {
   const navigate = useNavigate();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -38,7 +37,7 @@ function ChooseTemplatePage() {
   return (
     <div
       className="min-h-screen bg-cover bg-center flex flex-col items-center pt-20"
-      style={{ backgroundImage: `url(${bgfinal})` }}
+      style={{ backgroundImage: `url(${bg})` }}
     >
       <motion.h1
         className="text-3xl md:text-5xl text-white mb-12 text-center"
@@ -93,4 +92,4 @@ function ChooseTemplatePage() {
   );
 }
 
-export default ChooseTemplatePage;
+export default TemplatePage;

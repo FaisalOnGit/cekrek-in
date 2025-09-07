@@ -14,8 +14,8 @@ function ResultPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [result, setResult] = useState<ProcessResult | null>(null);
-  const [originalPhotos, setOriginalPhotos] = useState<string[]>([]); // UBAH: untuk foto asli
-  const [processedPhotos, setProcessedPhotos] = useState<string[]>([]); // TAMBAH: untuk foto dengan effect
+  const [originalPhotos, setOriginalPhotos] = useState<string[]>([]);
+  const [processedPhotos, setProcessedPhotos] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [gifBlob, setGifBlob] = useState<Blob | null>(null);
   const [isGeneratingGif, setIsGeneratingGif] = useState(false);
@@ -23,8 +23,8 @@ function ResultPage() {
   useEffect(() => {
     const stateData = location.state as {
       result: ProcessResult;
-      originalPhotos: string[]; // UBAH: terima foto asli
-      processedPhotos: string[]; // TAMBAH: terima foto dengan effect
+      originalPhotos: string[];
+      processedPhotos: string[];
     } | null;
 
     if (stateData) {
@@ -118,7 +118,7 @@ function ResultPage() {
       // 🔥 ambil mode dari localStorage
       const mode = localStorage.getItem("layout") || "cut";
 
-      fetch(`http://localhost:8888/save-image/?mode=${mode}`, {
+      fetch(`http://localhost:8000/save-image/?mode=${mode}`, {
         method: "POST",
         headers: {
           accept: "application/json",
