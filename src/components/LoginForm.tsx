@@ -1,15 +1,52 @@
 import React, { useState } from "react";
-import { Eye, EyeOff, Mail, Lock, X } from "lucide-react";
+import { Eye, EyeOff, User, Lock, X } from "lucide-react";
 
 export function LoginForm() {
-  const [email, setEmail] = useState("domat@example.com");
+  const [username, setUsername] = useState("domat"); // default dummy username
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login attempt:", { email, password, rememberMe });
+    setError("");
+
+    try {
+      const res = await fetch("http://localhost:8888/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Login failed");
+      }
+
+      const data = await res.json();
+
+      if (data?.access_token) {
+        // simpan token + info lain
+        localStorage.setItem("access_token", data.access_token);
+        localStorage.setItem("token_type", data.token_type);
+        localStorage.setItem("expires_in", data.expires_in.toString());
+
+        console.log("Token saved:", data);
+
+        // redirect ke dashboard
+        window.location.href = "/dashboard";
+      } else {
+        throw new Error("Access token not found in response");
+      }
+    } catch (err: any) {
+      console.error("Login error:", err);
+      setError(err.message || "Something went wrong");
+    }
   };
 
   return (
@@ -35,28 +72,30 @@ export function LoginForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Username */}
           <div>
             <label
-              htmlFor="email"
+              htmlFor="username"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Email
+              Username
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail className="h-5 w-5 text-gray-400" />
+                <User className="h-5 w-5 text-gray-400" />
               </div>
               <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 outline-none transition-all duration-200 hover:border-gray-400"
-                placeholder="Enter your email"
+                placeholder="Enter your username"
               />
             </div>
           </div>
 
+          {/* Password */}
           <div>
             <label
               htmlFor="password"
@@ -90,6 +129,7 @@ export function LoginForm() {
             </div>
           </div>
 
+          {/* Remember me + forgot password */}
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <input
@@ -114,6 +154,10 @@ export function LoginForm() {
             </button>
           </div>
 
+          {/* Error */}
+          {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
+
+          {/* Submit */}
           <button
             type="submit"
             className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-accent-500 focus:ring-4 focus:ring-accent-200 transition-all duration-200 transform hover:scale-105 active:scale-95"

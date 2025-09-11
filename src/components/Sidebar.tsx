@@ -22,7 +22,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
     { icon: ShoppingCart, label: "Orders", path: "/dashboard/orders" },
-    { icon: BadgePercent, label: "Setup", path: "/dashboard/rate" },
+    { icon: BadgePercent, label: "Rates", path: "/dashboard/rates" },
+    { icon: BadgePercent, label: "Vouchers", path: "/dashboard/vouchers" },
     { icon: FileText, label: "Template", path: "/dashboard/setup" },
     { icon: Users, label: "Customers", path: "/dashboard/customers" },
   ];

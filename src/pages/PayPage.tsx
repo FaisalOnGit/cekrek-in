@@ -1,20 +1,61 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Mail, Search } from "lucide-react";
+import { useState } from "react";
 import bgfinal from "/bg-final.png";
 import love from "/love.png";
 import awan1 from "/awan1.png";
 import awan2 from "/awan2.png";
 import awan3 from "/awan3.png";
 import awan4 from "/awan4.png";
-
 import bulan from "/bulan.png";
 
 function PayPage() {
   const navigate = useNavigate();
+  const [voucherCode, setVoucherCode] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleClick = () => {
-    navigate("/template");
+  const handleClick = async () => {
+    if (!voucherCode.trim()) {
+      alert("Masukkan kode voucher terlebih dahulu!");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Ambil token dari localStorage
+      const token = localStorage.getItem("access_token");
+
+      const response = await fetch("http://localhost:8888/orders/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // <<--- tambah token di sini
+        },
+        body: JSON.stringify({
+          rate_id: 1,
+          quantity: 1,
+          voucher_code: voucherCode,
+          notes: "string",
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Order created successfully:", data);
+        navigate("/template");
+      } else {
+        const errorData = await response.json();
+        console.error("Error creating order:", errorData);
+        alert("Gagal memproses voucher. Silakan coba lagi.");
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+      alert("Terjadi kesalahan jaringan. Silakan coba lagi.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const cloudData = [
@@ -153,17 +194,25 @@ function PayPage() {
         <input
           type="text"
           placeholder="Kode Voucher"
+          value={voucherCode}
+          onChange={(e) => setVoucherCode(e.target.value)}
           className="px-4 py-2 rounded-lg text-sm focus:outline-none"
           style={{
             fontFamily: '"Press Start 2P", monospace',
           }}
+          disabled={isLoading}
         />
         <button
-          className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-black rounded-lg text-sm tracking-wider transition-all"
+          className={`px-4 py-2 ${
+            isLoading
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-yellow-400 hover:bg-yellow-300"
+          } text-black rounded-lg text-sm tracking-wider transition-all`}
           style={{ fontFamily: '"Press Start 2P", monospace' }}
           onClick={handleClick}
+          disabled={isLoading}
         >
-          Use
+          {isLoading ? "..." : "Use"}
         </button>
       </motion.div>
       <div className="flex items-center justify-center mt-2">
