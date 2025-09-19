@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import bg from "/bg2.png";
 import { convertToGif } from "../utils/gifCoverter";
+import RetroButton from "../components/ui/RetroButton";
 
 interface ProcessResult {
   image_base64?: string;
@@ -114,8 +115,6 @@ function ResultPage() {
   const handleDownload = () => {
     if (result?.image_base64) {
       const base64Image = result.image_base64;
-
-      // 🔥 ambil mode dari localStorage
       const mode = localStorage.getItem("layout") || "cut";
 
       fetch(`http://localhost:8000/save-image/?mode=${mode}`, {
@@ -129,28 +128,22 @@ function ResultPage() {
         .then((response) => response.json())
         .then((data) => {
           if (data.message === "Image saved successfully") {
-            alert("Image saved successfully to the folder!");
+            console.log("Image saved successfully");
           } else {
-            alert("Error saving image!");
+            console.log("Error saving image");
           }
         })
         .catch((error) => {
           console.error("Error:", error);
-          alert("Error saving image!");
+        })
+        .finally(() => {
+          // apapun hasilnya, tetap navigate ke /thanks
+          navigate("/thanks");
         });
+    } else {
+      // kalau tidak ada image tetap navigate juga
+      navigate("/thanks");
     }
-  };
-
-  const handleNewSession = () => {
-    localStorage.removeItem("capturedPhotos");
-    localStorage.removeItem("selectedLayout");
-    navigate("/capture");
-  };
-
-  const handleBackToTemplate = () => {
-    localStorage.removeItem("capturedPhotos");
-    localStorage.removeItem("selectedLayout");
-    navigate("/template");
   };
 
   if (isLoading) {
@@ -385,48 +378,12 @@ function ResultPage() {
         transition={{ delay: 0.7 }}
       >
         {result?.image_base64 && (
-          <motion.button
-            onClick={handleDownload}
-            className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg text-lg border-2 border-green-400"
-            style={{ fontFamily: '"Press Start 2P", monospace' }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            DOWNLOAD
-          </motion.button>
+          <RetroButton onClick={handleDownload}>Print</RetroButton>
         )}
 
         {gifBlob && (
-          <motion.button
-            onClick={handleDownloadGif}
-            className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-4 rounded-lg text-lg border-2 border-pink-400"
-            style={{ fontFamily: '"Press Start 2P", monospace' }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            DOWNLOAD GIF
-          </motion.button>
+          <RetroButton onClick={handleDownloadGif}>DOWNLOAD GIF</RetroButton>
         )}
-
-        <motion.button
-          onClick={handleNewSession}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-lg border-2 border-blue-400"
-          style={{ fontFamily: '"Press Start 2P", monospace' }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          SESI BARU
-        </motion.button>
-
-        <motion.button
-          onClick={handleBackToTemplate}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-lg text-lg border-2 border-purple-400"
-          style={{ fontFamily: '"Press Start 2P", monospace' }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          PILIH TEMPLATE
-        </motion.button>
       </motion.div>
 
       {/* Status Message */}

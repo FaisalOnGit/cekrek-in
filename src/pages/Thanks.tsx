@@ -3,8 +3,14 @@ import bg from "/bg2.png";
 import love from "/love.png";
 import smile from "/smile.png";
 import RetroButton from "../components/ui/RetroButton";
+import { useNavigate } from "react-router-dom";
 
 function ThanksPage() {
+  const navigate = useNavigate();
+  const handleSubmit = () => {
+    // di sini bisa tambahin logic simpan form kalau perlu
+    navigate("/"); // <== pindah ke root
+  };
   return (
     <div
       className="min-h-screen bg-cover bg-center flex flex-col items-center pt-20"
@@ -70,7 +76,7 @@ function ThanksPage() {
           placeholder="Your Email"
           className="self-end px-4 py-4 w-72 border border-gray-300 rounded-3xl rounded-br-none focus:outline-none focus:ring-2 focus:ring-primary relative z-10"
         />
-        <RetroButton>Submit</RetroButton>
+        <RetroButton onClick={handleSubmit}>Submit</RetroButton>
       </div>
     </div>
   );

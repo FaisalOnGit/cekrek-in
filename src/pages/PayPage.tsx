@@ -16,46 +16,7 @@ function PayPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleClick = async () => {
-    if (!voucherCode.trim()) {
-      alert("Masukkan kode voucher terlebih dahulu!");
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      // Ambil token dari localStorage
-      const token = localStorage.getItem("access_token");
-
-      const response = await fetch("http://localhost:8888/orders/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // <<--- tambah token di sini
-        },
-        body: JSON.stringify({
-          rate_id: 1,
-          quantity: 1,
-          voucher_code: voucherCode,
-          notes: "string",
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Order created successfully:", data);
-        navigate("/template");
-      } else {
-        const errorData = await response.json();
-        console.error("Error creating order:", errorData);
-        alert("Gagal memproses voucher. Silakan coba lagi.");
-      }
-    } catch (error) {
-      console.error("Network error:", error);
-      alert("Terjadi kesalahan jaringan. Silakan coba lagi.");
-    } finally {
-      setIsLoading(false);
-    }
+    navigate("/template");
   };
 
   const cloudData = [

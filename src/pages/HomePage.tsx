@@ -32,7 +32,7 @@ function HomePage() {
             clearInterval(interval);
             setIsGameStarted(false);
             setCountdown(null);
-            navigate("/pay");
+            navigate("/template");
             return null;
           }
           return prev! - 1;

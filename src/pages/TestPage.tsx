@@ -8,7 +8,7 @@ import CapturedPreview from "../components/CapturedPreview";
 import ErrorModal from "../components/ErrorModal";
 
 function Test() {
-  const [timeLeft, setTimeLeft] = useState(35 * 60);
+  const [timeLeft, setTimeLeft] = useState(5 * 60);
 
   const {
     // Refs
@@ -34,7 +34,7 @@ function Test() {
     startCountdown,
     retakePhoto,
     resetSession,
-    switchCamera,
+
     handleLayoutChange,
     handleDelayChange,
     clearError,
@@ -116,8 +116,43 @@ function Test() {
           showSettings={showSettings}
         />
 
-        {/* Camera Box */}
-        {!isUploading && (
+        {/* Camera and Preview Layout */}
+        {!isUploading && !showSettings && (
+          <div className="flex flex-col lg:flex-row items-start justify-center gap-6 w-full max-w-6xl">
+            {/* Left Camera Section */}
+            <div className="lg:w-2/3 w-full flex justify-center">
+              <CameraBox
+                webcamRef={webcamRef}
+                facingMode={facingMode}
+                countdown={countdown}
+                isCapturing={isCapturing}
+                showSettings={showSettings}
+                isSessionComplete={isSessionComplete}
+                currentPhotoIndex={currentPhotoIndex}
+                selectedLayout={selectedLayout}
+                capturedImages={capturedImages}
+                result={result}
+                onStartCountdown={startCountdown}
+                onRetakePhoto={retakePhoto}
+                onResetSession={resetSession}
+              />
+            </div>
+
+            {/* Right Preview Section */}
+            <div className="lg:w-1/3 w-full">
+              <CapturedPreview
+                capturedImages={capturedImages}
+                isUploading={isUploading}
+                isSessionComplete={isSessionComplete}
+                showSettings={showSettings}
+                result={result}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Camera Box (when uploading or on mobile) */}
+        {!isUploading && showSettings && (
           <CameraBox
             webcamRef={webcamRef}
             facingMode={facingMode}
@@ -146,13 +181,16 @@ function Test() {
           />
         )}
 
-        <CapturedPreview
-          capturedImages={capturedImages}
-          isUploading={isUploading}
-          isSessionComplete={isSessionComplete}
-          showSettings={showSettings}
-          result={result}
-        />
+        {/* Preview for mobile/settings view */}
+        {(showSettings || isUploading) && (
+          <CapturedPreview
+            capturedImages={capturedImages}
+            isUploading={isUploading}
+            isSessionComplete={isSessionComplete}
+            showSettings={showSettings}
+            result={result}
+          />
+        )}
       </div>
 
       <ErrorModal error={error} onClose={clearError} />
